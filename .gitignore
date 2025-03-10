@@ -1,0 +1,101 @@
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (Mono/MonoDevelop)
+*.pidb
+*.booproj
+
+# Mono auto generated files
+mono_crash.*
+
+# Unity3D
+[Uu]nity[Aa]ssets
+[Uu]nity[Pp]roject
+[Uu]nity[Pp]roject/*
+
+# Unity3D (Mac)
+*.pidb.meta
+*.unityproj
+*.unity
+*.asset
+*.meta
+
+# Unreal Engine Files
+Intermediate/
+Saved/
+*.opensdf
+*.sdf
+*.opentdb
+*.tps
+*.uprojectdirs
+
+# Visual Studio Code
+.vscode/
+
+# Mac
+.DS_Store
+
+# Thumbs.db
+Thumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# JetBrains Rider
+.idea/
+*.iws
+
+# JetBrains ReSharper
+_ReSharper*/
+*.ReSharper
+*.DotSettings.user
+
+# Visual Studio 2015/2017/2019/2022 cache/options directory
+.vs/
+
+# Visual Studio Code cache directory
+.vscode/
+
+# Ignore compiled binaries
+*.exe
+*.dll
+*.pdb
+*.db-shm
+*.db-wal
+
+# Ignore build output directories
+**/bin/
+**/obj/
+
+# Ignore all RESULT_IMAGE directories and their contents
+**/RESULT_IMAGE/
+
+# Exclude specific directories and their contents
+!**/RESULT_JSON/
+!**/VIDEO_FOLDER/
+!**/TXT_FOLDER/
+!**/LOGS/
+!**/Migrations/
+
+# Include all files in the excluded directories
+!**/RESULT_JSON/**
+!**/VIDEO_FOLDER/**
+!**/TXT_FOLDER/**
+!**/LOGS/**
+!**/Migrations/**
