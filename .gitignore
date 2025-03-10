@@ -83,19 +83,3 @@ _ReSharper*/
 **/bin/
 **/obj/
 
-# Ignore all RESULT_IMAGE directories and their contents
-**/RESULT_IMAGE/
-
-# Exclude specific directories and their contents
-!**/RESULT_JSON/
-!**/VIDEO_FOLDER/
-!**/TXT_FOLDER/
-!**/LOGS/
-!**/Migrations/
-
-# Include all files in the excluded directories
-!**/RESULT_JSON/**
-!**/VIDEO_FOLDER/**
-!**/TXT_FOLDER/**
-!**/LOGS/**
-!**/Migrations/**
