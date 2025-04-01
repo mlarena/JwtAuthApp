@@ -28,6 +28,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<ControllerDiscoveryService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
 
