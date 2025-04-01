@@ -83,3 +83,5 @@ _ReSharper*/
 **/bin/
 **/obj/
 
+*Migrations/
+

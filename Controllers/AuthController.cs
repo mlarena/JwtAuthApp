@@ -29,7 +29,7 @@ namespace JwtAuthApp.Controllers
                 return View(model);
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == model.Username);
-            
+
             if (user == null || !_authService.VerifyPassword(model.Password, user.PasswordHash, user.Salt))
             {
                 ModelState.AddModelError("", "Invalid credentials");
@@ -61,12 +61,13 @@ namespace JwtAuthApp.Controllers
             {
                 Username = model.Username,
                 PasswordHash = hash,
-                Salt = salt
+                Salt = salt,
+                Role = string.IsNullOrEmpty(model.Role) ? "User" : model.Role // По умолчанию User
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            
+
             var token = _authService.GenerateJwtToken(user);
             HttpContext.Session.SetString("JWToken", token);
             return RedirectToAction("Index", "Home");
@@ -94,5 +95,6 @@ namespace JwtAuthApp.Controllers
         public string Username { get; set; }
         [Required]
         public string Password { get; set; }
+        public string Role { get; set; } // Добавляем для админ-функционала
     }
 }

@@ -11,6 +11,7 @@ namespace JwtAuthApp.Services
     public interface IAuthService
     {
         string GenerateJwtToken(User user);
+
         (string hash, string salt) HashPassword(string password);
         bool VerifyPassword(string password, string hash, string salt);
     }
@@ -28,13 +29,14 @@ namespace JwtAuthApp.Services
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username)
-            };
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Name, user.Username),
+        new Claim(ClaimTypes.Role, user.Role) // Добавляем роль в claims
+    };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            
+
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
@@ -56,7 +58,7 @@ namespace JwtAuthApp.Services
 
             using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(salt));
             var hash = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(password)));
-            
+
             return (hash, salt);
         }
 

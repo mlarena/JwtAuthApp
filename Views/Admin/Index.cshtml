@@ -1,0 +1,26 @@
+@model IEnumerable<JwtAuthApp.Models.User>
+<h2>Users Management</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Username</td>
+                <td>@user.Role</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@user.Id">Edit</a> |
+                    <form asp-action="Delete" asp-route-id="@user.Id" method="post" style="display:inline;">
+                        <button type="submit" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
