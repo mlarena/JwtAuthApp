@@ -28,17 +28,13 @@
                         </li>
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item">
-                                 <a class="nav-link text-dark" asp-area="" asp-controller="Secure" asp-action="Index">Secure</a>
-                            </li>
                             @if (User.IsInRole("Admin"))
                             {
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a>
-                                    </li>
-                            }                                                
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a>
+                                </li>
+                            }
                         }
-                        
                     </ul>
                     <div class="navbar-nav">
                         @if (User.Identity.IsAuthenticated)
@@ -72,6 +68,21 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('/Menu/GetUserMenuItems')
+                .then(response => response.json())
+                .then(data => {
+                    const navbar = document.querySelector('.navbar-nav');
+                    data.forEach(controller => {
+                        const li = document.createElement('li');
+                        li.className = 'nav-item';
+                        li.innerHTML = `<a class="nav-link text-dark" asp-area="" asp-controller="${controller}" asp-action="Index">${controller}</a>`;
+                        navbar.appendChild(li);
+                    });
+                });
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
