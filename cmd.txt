@@ -7,3 +7,15 @@ dotnet ef migrations list
 dotnet ef migrations script
 
 UPDATE Users SET Role = 'Admin' WHERE Username = 'ваш_username';
+
+# Удалите старые миграции (если есть)
+Remove-Item -Path "Data\Migrations" -Recurse -Force -ErrorAction SilentlyContinue
+
+# Создайте новые миграции
+dotnet ef migrations add InitialCreate -o Data\Migrations
+
+# Примените миграции
+dotnet ef database update
+
+# Запустите проект
+dotnet run
