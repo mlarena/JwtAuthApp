@@ -25,6 +25,7 @@ namespace JwtAuthApp.Controllers
             return View(users);
         }
 
+
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {

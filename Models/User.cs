@@ -6,6 +6,7 @@ namespace JwtAuthApp.Models
     [Table("Users")]
     public class User
     {
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("Id")]
@@ -33,7 +34,5 @@ namespace JwtAuthApp.Models
         [Column("CreatedAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Навигационное свойство - ДОБАВЬТЕ ЭТО!
-       // public virtual ICollection<UserControllerAccess> ControllerAccesses { get; set; } = new List<UserControllerAccess>();
     }
 }

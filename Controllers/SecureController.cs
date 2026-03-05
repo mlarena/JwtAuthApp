@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JwtAuthApp.Controllers
 {
+    
     [Authorize]
     public class SecureController : Controller
     {
@@ -11,4 +12,5 @@ namespace JwtAuthApp.Controllers
             return View();
         }
     }
+
 }

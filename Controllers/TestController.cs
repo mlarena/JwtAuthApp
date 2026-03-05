@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace JwtAuthApp.Controllers
 {
  
+ 
     [Authorize]
      public class TestController : Controller
     {

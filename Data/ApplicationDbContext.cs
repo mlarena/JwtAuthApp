@@ -6,7 +6,6 @@ namespace JwtAuthApp.Data
     public class ApplicationDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
-        // Удаляем DbSet<UserControllerAccess>
         
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -22,7 +21,6 @@ namespace JwtAuthApp.Data
                 .HasIndex(u => u.UserName) // Изменено с Username на UserName
                 .IsUnique();
 
-            // Удаляем все настройки для UserControllerAccess
         }
     }
 }

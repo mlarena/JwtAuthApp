@@ -1,0 +1,30 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unauthorized</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h2 class="text-center">Access Denied</h2>
+                    </div>
+                    <div class="card-body text-center">
+                        <p>You need to be logged in to access this page. </p>
+                        <a href="/Auth/Login" class="btn btn-primary">Go to Login.</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

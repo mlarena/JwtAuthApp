@@ -4,9 +4,9 @@
 <form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Id" />
     <div class="form-group">
-        <label asp-for="UserName" class="control-label"></label> @* Изменено *@
-        <input asp-for="UserName" class="form-control" /> @* Изменено *@
-        <span asp-validation-for="UserName" class="text-danger"></span> @* Изменено *@
+        <label asp-for="UserName" class="control-label"></label> 
+        <input asp-for="UserName" class="form-control" /> 
+        <span asp-validation-for="UserName" class="text-danger"></span> 
     </div>
     <div class="form-group">
         <label asp-for="Role" class="control-label"></label>
@@ -16,7 +16,6 @@
         </select>
         <span asp-validation-for="Role" class="text-danger"></span>
     </div>
-    @* Удаляем блок с чекбоксами контроллеров *@
     <button type="submit" class="btn btn-primary">Save</button>
     <a asp-action="Index" class="btn btn-secondary">Cancel</a>
 </form>

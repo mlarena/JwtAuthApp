@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JwtAuthApp.Data;
-using JwtAuthApp.Models;
 using JwtAuthApp.Services;
+using JwtAuthApp.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -23,6 +23,7 @@ namespace JwtAuthApp.Controllers
             _authService = authService;
         }
 
+        // Убираем атрибуты маршрутизации, которые конфликтуют с HomeController
         [HttpGet]
         public IActionResult Login() => View();
 

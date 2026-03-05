@@ -28,15 +28,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
+        
+        // Добавляем обработку события, когда токен не валиден
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                // Пропускаем дефолтную логику
+                context.HandleResponse();
+                
+                // Перенаправляем на страницу логина
+                context.Response.Redirect("/Auth/Login");
+                return Task.CompletedTask;
+            },
+            OnForbidden = context =>
+            {
+                // Перенаправляем на страницу логина при недостаточных правах
+                context.Response.Redirect("/Auth/Login");
+                return Task.CompletedTask;
+            }
+        };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    // Политика для доступа только авторизованным пользователям
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
-});
+builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllersWithViews()
@@ -70,7 +84,7 @@ builder.Services.AddAntiforgery(options =>
     options.HeaderName = "X-CSRF-TOKEN";
     options.Cookie.Name = "AntiForgeryCookie";
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // Изменено с Always на SameAsRequest
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
 // Добавляем Swagger
@@ -168,8 +182,21 @@ app.Use(async (context, next) =>
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Middleware для перенаправления неавторизованных пользователей
+// Middleware для обработки 404 ошибок
+app.Use(async (context, next) =>
+{
+    await next();
+    
+    if (context.Response.StatusCode == 404 && !context.User.Identity?.IsAuthenticated == true)
+    {
+        context.Response.Redirect("/Auth/Login");
+    }
+    else if (context.Response.StatusCode == 404 && context.User.Identity?.IsAuthenticated == true)
+    {
+        context.Response.Redirect("/Home/Index");
+    }
+});
+// Middleware для обработки маршрутов
 app.Use(async (context, next) =>
 {
     // Пропускаем запросы к статическим файлам
@@ -178,6 +205,14 @@ app.Use(async (context, next) =>
         context.Request.Path.StartsWithSegments("/lib"))
     {
         await next();
+        return;
+    }
+
+    // Обработка пустого маршрута Auth
+    if (context.Request.Path.Equals("/Auth") || 
+        context.Request.Path.Equals("/Auth/"))
+    {
+        context.Response.Redirect("/Auth/Login");
         return;
     }
 
@@ -194,10 +229,10 @@ app.Use(async (context, next) =>
         return;
     }
 
-    // Если пользователь авторизован и пытается получить доступ к Auth контроллеру
+    // Если пользователь авторизован и пытается получить доступ к Auth контроллеру (кроме Logout)
     if (context.User.Identity?.IsAuthenticated == true && 
         context.Request.Path.StartsWithSegments("/Auth") &&
-        !isLogoutPost)
+        !context.Request.Path.Equals("/Auth/Logout"))
     {
         context.Response.Redirect("/Home/Index");
         return;
@@ -206,11 +241,12 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// Настройка маршрутов
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Перенаправление корневого пути
+// Обработка корневого маршрута
 app.MapGet("/", context =>
 {
     if (context.User.Identity?.IsAuthenticated == true)
