@@ -6,6 +6,7 @@ using JwtAuthApp.Data;
 using JwtAuthApp.Services;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Политика для доступа только авторизованным пользователям
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
@@ -37,7 +45,7 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-// Добавляем CORS для будущего использования с фронтендом
+// Добавляем CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -49,7 +57,6 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddSingleton<ControllerDiscoveryService>();
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -57,20 +64,21 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Настройка перенаправления при отсутствии авторизации
-builder.Services.ConfigureApplicationCookie(options =>
+// Добавляем Antiforgery с правильной настройкой для HTTP/HTTPS
+builder.Services.AddAntiforgery(options => 
 {
-    options.LoginPath = "/Auth/Login";
-    options.AccessDeniedPath = "/Auth/AccessDenied";
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "AntiForgeryCookie";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // Изменено с Always на SameAsRequest
 });
 
-// Добавляем Swagger для API документации
+// Добавляем Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "JwtAuthApp API", Version = "v1" });
     
-    // Добавляем поддержку JWT в Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme",
@@ -105,14 +113,14 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate();
     
     // Создаем суперпользователя, если его нет
-    if (!dbContext.Users.Any(u => u.Username == "su"))
+    if (!dbContext.Users.Any(u => u.UserName == "su"))
     {
         var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         var (hash, salt) = authService.HashPassword("su");
         
         var superUser = new JwtAuthApp.Models.User
         {
-            Username = "su",
+            UserName = "su",
             PasswordHash = hash,
             Salt = salt,
             Role = "Admin"
@@ -136,12 +144,18 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// В разработке используем HTTP, в продакшене - HTTPS
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseSession();
 
+// Middleware для добавления токена в заголовок
 app.Use(async (context, next) =>
 {
     var token = context.Session.GetString("JWToken");
@@ -155,10 +169,59 @@ app.Use(async (context, next) =>
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Middleware для перенаправления неавторизованных пользователей
+app.Use(async (context, next) =>
+{
+    // Пропускаем запросы к статическим файлам
+    if (context.Request.Path.StartsWithSegments("/css") ||
+        context.Request.Path.StartsWithSegments("/js") ||
+        context.Request.Path.StartsWithSegments("/lib"))
+    {
+        await next();
+        return;
+    }
+
+    // Проверяем, является ли запрос POST запросом на Logout
+    bool isLogoutPost = context.Request.Method == "POST" && 
+                        context.Request.Path.Equals("/Auth/Logout");
+
+    // Если пользователь не авторизован и пытается получить доступ не к Auth контроллеру
+    if (!context.User.Identity?.IsAuthenticated == true && 
+        !context.Request.Path.StartsWithSegments("/Auth") &&
+        !isLogoutPost)
+    {
+        context.Response.Redirect("/Auth/Login");
+        return;
+    }
+
+    // Если пользователь авторизован и пытается получить доступ к Auth контроллеру
+    if (context.User.Identity?.IsAuthenticated == true && 
+        context.Request.Path.StartsWithSegments("/Auth") &&
+        !isLogoutPost)
+    {
+        context.Response.Redirect("/Home/Index");
+        return;
+    }
+
+    await next();
+});
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapGet("/", () => Results.Redirect("/Home/Index"));
+// Перенаправление корневого пути
+app.MapGet("/", context =>
+{
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        context.Response.Redirect("/Home/Index");
+    }
+    else
+    {
+        context.Response.Redirect("/Auth/Login");
+    }
+    return Task.CompletedTask;
+});
 
 app.Run();

@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 namespace JwtAuthApp.Controllers
 {
-    public class TestController : Controller
+ 
+    [Authorize]
+     public class TestController : Controller
     {
         public IActionResult Index()
         {

@@ -36,9 +36,9 @@ namespace JwtAuthApp.Services
                 var claims = new[]
                 {
                     new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                    new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
+                    new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName), // Изменено с Username на UserName
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Name, user.UserName), // Изменено с Username на UserName
                     new Claim(ClaimTypes.Role, user.Role),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
@@ -60,7 +60,7 @@ namespace JwtAuthApp.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating JWT token for user {Username}", user.Username);
+                _logger.LogError(ex, "Error generating JWT token for user {UserName}", user.UserName); // Изменено
                 throw;
             }
         }

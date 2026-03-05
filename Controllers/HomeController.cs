@@ -1,9 +1,11 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using JwtAuthApp.Models;
 
 namespace JwtAuthApp.Controllers;
 
+[Authorize] // Только для авторизованных пользователей
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;

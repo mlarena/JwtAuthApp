@@ -4,9 +4,9 @@
 <form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Id" />
     <div class="form-group">
-        <label asp-for="Username" class="control-label"></label>
-        <input asp-for="Username" class="form-control" />
-        <span asp-validation-for="Username" class="text-danger"></span>
+        <label asp-for="UserName" class="control-label"></label> @* Изменено *@
+        <input asp-for="UserName" class="form-control" /> @* Изменено *@
+        <span asp-validation-for="UserName" class="text-danger"></span> @* Изменено *@
     </div>
     <div class="form-group">
         <label asp-for="Role" class="control-label"></label>
@@ -16,17 +16,7 @@
         </select>
         <span asp-validation-for="Role" class="text-danger"></span>
     </div>
-    <div class="form-group">
-        <label class="control-label">Controllers</label>
-        @foreach (var controller in ViewBag.Controllers)
-        {
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="SelectedControllers" value="@controller"
-                @(Model.SelectedControllers.Contains(controller) ? "checked" : "") />
-                <label class="form-check-label">@controller</label>
-            </div>
-        }
-    </div>
+    @* Удаляем блок с чекбоксами контроллеров *@
     <button type="submit" class="btn btn-primary">Save</button>
     <a asp-action="Index" class="btn btn-secondary">Cancel</a>
 </form>

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JwtAuthApp.Data;
 using JwtAuthApp.Models;
-using JwtAuthApp.Services;
 using JwtAuthApp.ViewModels;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,12 +13,10 @@ namespace JwtAuthApp.Controllers
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly ControllerDiscoveryService _controllerDiscoveryService;
 
-        public AdminController(ApplicationDbContext context, ControllerDiscoveryService controllerDiscoveryService)
+        public AdminController(ApplicationDbContext context)
         {
             _context = context;
-            _controllerDiscoveryService = controllerDiscoveryService;
         }
 
         public async Task<IActionResult> Index()
@@ -37,21 +34,13 @@ namespace JwtAuthApp.Controllers
                 return NotFound();
             }
 
-            var controllers = _controllerDiscoveryService.GetControllerNames();
-            var userControllerAccesses = await _context.UserControllerAccesses
-                .Where(uca => uca.UserId == id)
-                .Select(uca => uca.ControllerName)
-                .ToListAsync();
-
             var viewModel = new EditUserViewModel
             {
                 Id = user.Id,
-                Username = user.Username,
-                Role = user.Role,
-                SelectedControllers = userControllerAccesses
+                UserName = user.UserName, // РР·РјРµРЅРµРЅРѕ СЃ Username РЅР° UserName
+                Role = user.Role
+                // РЈРґР°Р»СЏРµРј SelectedControllers
             };
-
-            ViewBag.Controllers = controllers;
 
             return View(viewModel);
         }
@@ -75,59 +64,23 @@ namespace JwtAuthApp.Controllers
                         return NotFound();
                     }
 
-                    existingUser.Username = viewModel.Username;
+                    existingUser.UserName = viewModel.UserName; // РР·РјРµРЅРµРЅРѕ СЃ Username РЅР° UserName
                     existingUser.Role = viewModel.Role;
+                    
                     _context.Update(existingUser);
-
-                    // Обновить доступы к контроллерам
-                    var currentAccesses = await _context.UserControllerAccesses
-                        .Where(uca => uca.UserId == id)
-                        .ToListAsync();
-
-                    _context.UserControllerAccesses.RemoveRange(currentAccesses);
-
-                    foreach (var controller in viewModel.SelectedControllers)
-                    {
-                        _context.UserControllerAccesses.Add(new UserControllerAccess
-                        {
-                            UserId = id,
-                            ControllerName = controller
-                        });
-                    }
-
                     await _context.SaveChangesAsync();
+                    
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException ex)
+                catch (DbUpdateConcurrencyException)
                 {
-                    // Логирование ошибки
-                    Console.WriteLine($"DbUpdateConcurrencyException: {ex.Message}");
                     if (!UserExists(viewModel.Id))
                     {
                         return NotFound();
                     }
                     throw;
                 }
-                catch (Exception ex)
-                {
-                    // Логирование ошибки
-                    Console.WriteLine($"Exception: {ex.Message}");
-                    throw;
-                }
             }
-
-            // Логирование ошибок валидации
-            foreach (var modelState in ModelState.Values)
-            {
-                foreach (var error in modelState.Errors)
-                {
-                    Console.WriteLine($"Validation Error: {error.ErrorMessage}");
-                }
-            }
-
-            // Если ModelState недействителен, вернуть представление с текущими данными
-            var controllers = _controllerDiscoveryService.GetControllerNames();
-            ViewBag.Controllers = controllers;
 
             return View(viewModel);
         }

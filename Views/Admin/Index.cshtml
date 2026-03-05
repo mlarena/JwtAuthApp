@@ -3,7 +3,7 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Username</th>
+            <th>UserName</th> @* Изменено *@
             <th>Role</th>
             <th>Actions</th>
         </tr>
@@ -12,7 +12,7 @@
         @foreach (var user in Model)
         {
             <tr>
-                <td>@user.Username</td>
+                <td>@user.UserName</td> @* Изменено *@
                 <td>@user.Role</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@user.Id">Edit</a> |
