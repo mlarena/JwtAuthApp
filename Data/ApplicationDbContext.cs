@@ -6,6 +6,7 @@ namespace JwtAuthApp.Data
     public class ApplicationDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+        public DbSet<MonitoringPost> MonitoringPosts { get; set; } // Добавить эту строкю
         
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

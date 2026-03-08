@@ -1,0 +1,68 @@
+@model JwtAuthApp.Models.MonitoringPost
+
+@{
+    ViewData["Title"] = "Post Details";
+}
+
+<h2>Post Details</h2>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Id)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Id)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Name)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Name)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Description)</dt>
+            <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Description) ? "No description" : Model.Description)</dd>
+
+            <dt class="col-sm-3">Coordinates</dt>
+            <dd class="col-sm-9">
+                @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+                {
+                    <span>Latitude: @Model.Latitude°, Longitude: @Model.Longitude°</span>
+                }
+                else
+                {
+                    <span class="text-muted">No coordinates set</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.IsMobile)</dt>
+            <dd class="col-sm-9">
+                @if (Model.IsMobile)
+                {
+                    <span class="badge bg-info">Mobile post</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Fixed post</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.IsActive)</dt>
+            <dd class="col-sm-9">
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success">Active</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Inactive</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
+            <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.UpdatedAt)</dt>
+            <dd class="col-sm-9">@Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
