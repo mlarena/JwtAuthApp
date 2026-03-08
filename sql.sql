@@ -14,3 +14,28 @@ CREATE TABLE public."Users" (
 	CONSTRAINT "PK_Users" PRIMARY KEY ("Id")
 );
 CREATE UNIQUE INDEX "IX_Users_UserName" ON public."Users" USING btree ("UserName");
+
+INSERT INTO public."Users"
+( 
+	"UserName", 
+	"PasswordHash", 
+	"Salt", 
+	"Role", 
+	"CreatedAt"
+)
+VALUES
+(
+	'user', 
+	'BGbqn4q2wTrX3/iIS90P24WetITGFwZbF/jnZdkQtQg=', 
+	'jXjo6ISc918Eaucu6iqx85iDljMZm2YB1SwJrq+qRF4=', 
+	'User', 
+	'2026-03-05 16:45:10.608 +0300'
+),
+(
+	'admin', 
+	'/MQkgL88uG+5812Tqc6YwCVvr7hWMRD9flxoljGbBa8=', 
+	'/6/oaoyAlsEe5VPoPTwth6A81gvBTwJET/m8MHCrLIQ=', 
+	'Admin', 
+	'2026-03-05 16:45:10.608 +0300'
+);
+

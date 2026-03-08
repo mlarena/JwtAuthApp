@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using JwtAuthApp.Data;
 using JwtAuthApp.Models;
 using JwtAuthApp.ViewModels;
+using JwtAuthApp.Services; // Добавляем using для IAuthService
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,10 +14,13 @@ namespace JwtAuthApp.Controllers
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuthService _authService; // Добавляем сервис для хеширования
 
-        public AdminController(ApplicationDbContext context)
+        // Обновляем конструктор
+        public AdminController(ApplicationDbContext context, IAuthService authService)
         {
             _context = context;
+            _authService = authService;
         }
 
         public async Task<IActionResult> Index()
@@ -25,6 +29,50 @@ namespace JwtAuthApp.Controllers
             return View(users);
         }
 
+        // GET: Admin/Create
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: Admin/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateUserViewModel viewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                // Проверяем, существует ли пользователь с таким именем
+                if (_context.Users.Any(u => u.UserName == viewModel.UserName))
+                {
+                    ModelState.AddModelError("UserName", "Username already exists");
+                    return View(viewModel);
+                }
+
+                // Хешируем пароль
+                var (hash, salt) = _authService.HashPassword(viewModel.Password);
+                
+                // Создаем нового пользователя
+                var user = new User
+                {
+                    UserName = viewModel.UserName,
+                    PasswordHash = hash,
+                    Salt = salt,
+                    Role = string.IsNullOrEmpty(viewModel.Role) ? "User" : viewModel.Role
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                // Логируем действие (опционально)
+                // _logger.LogInformation($"Admin created new user: {user.UserName}");
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(viewModel);
+        }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
@@ -38,9 +86,8 @@ namespace JwtAuthApp.Controllers
             var viewModel = new EditUserViewModel
             {
                 Id = user.Id,
-                UserName = user.UserName, // Изменено с Username на UserName
+                UserName = user.UserName,
                 Role = user.Role
-                // Удаляем SelectedControllers
             };
 
             return View(viewModel);
@@ -65,7 +112,7 @@ namespace JwtAuthApp.Controllers
                         return NotFound();
                     }
 
-                    existingUser.UserName = viewModel.UserName; // Изменено с Username на UserName
+                    existingUser.UserName = viewModel.UserName;
                     existingUser.Role = viewModel.Role;
                     
                     _context.Update(existingUser);
