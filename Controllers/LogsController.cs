@@ -18,28 +18,47 @@ namespace JwtAuthApp.Controllers
 
         public async Task<IActionResult> Index(
             string? userName, 
-            string? action, 
+            string? ipAddress,
             DateTime? from, 
             DateTime? to,
             int page = 1)
         {
             const int pageSize = 50;
 
+            // Получаем списки уникальных значений для фильтров
+            var userNames = await _context.UserActionLogs
+                .Where(l => l.UserName != null)
+                .Select(l => l.UserName)
+                .Distinct()
+                .OrderBy(u => u)
+                .ToListAsync();
+
+            var ipAddresses = await _context.UserActionLogs
+                .Where(l => l.IpAddress != null)
+                .Select(l => l.IpAddress)
+                .Distinct()
+                .OrderBy(ip => ip)
+                .ToListAsync();
+
+            // Сохраняем списки в ViewBag для выпадающих списков
+            ViewBag.UserNames = userNames;
+            ViewBag.IpAddresses = ipAddresses;
+
             // Начинаем с базового запроса
             var query = _context.UserActionLogs
                 .Include(l => l.User)
                 .AsNoTracking()
-                .AsQueryable(); // Используем AsQueryable() для фильтрации
+                .AsQueryable();
 
-            // Применяем фильтры (без приведения типов)
+            // Применяем фильтры
             if (!string.IsNullOrEmpty(userName))
             {
-                query = query.Where(l => l.UserName.Contains(userName));
+                query = query.Where(l => l.UserName == userName);
             }
 
-            if (!string.IsNullOrEmpty(action))
+            if (!string.IsNullOrEmpty(ipAddress))
             {
-                query = query.Where(l => l.Action.Contains(action));
+                query = query.Where(l => l.IpAddress == ipAddress);
             }
 
             if (from.HasValue)
@@ -71,7 +90,7 @@ namespace JwtAuthApp.Controllers
             ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
             ViewBag.TotalItems = totalItems;
             ViewBag.UserName = userName;
-            ViewBag.Action = action;
+            ViewBag.IpAddress = ipAddress;
             ViewBag.From = from;
             ViewBag.To = to;
 

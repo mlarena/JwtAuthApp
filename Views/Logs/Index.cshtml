@@ -12,23 +12,53 @@
         <form method="get" class="row g-3">
             <div class="col-md-3">
                 <label class="form-label">Имя пользователя</label>
-                <input type="text" name="userName" class="form-control" value="@ViewBag.UserName" />
+                <select name="userName" class="form-select">
+                    <option value="">Все пользователи</option>
+                    @foreach (var user in ViewBag.UserNames)
+                    {
+                        if (ViewBag.UserName == user)
+                        {
+                            <option value="@user" selected>@user</option>
+                        }
+                        else
+                        {
+                            <option value="@user">@user</option>
+                        }
+                    }
+                </select>
             </div>
+            
             <div class="col-md-3">
-                <label class="form-label">Действие</label>
-                <input type="text" name="action" class="form-control" value="@ViewBag.Action" />
+                <label class="form-label">IP адрес</label>
+                <select name="ipAddress" class="form-select">
+                    <option value="">Все IP адреса</option>
+                    @foreach (var ip in ViewBag.IpAddresses)
+                    {
+                        if (ViewBag.IpAddress == ip)
+                        {
+                            <option value="@ip" selected>@ip</option>
+                        }
+                        else
+                        {
+                            <option value="@ip">@ip</option>
+                        }
+                    }
+                </select>
             </div>
+            
             <div class="col-md-2">
                 <label class="form-label">С даты</label>
                 <input type="datetime-local" name="from" class="form-control" value="@(ViewBag.From?.ToString("yyyy-MM-ddTHH:mm"))" />
             </div>
+            
             <div class="col-md-2">
                 <label class="form-label">По дату</label>
                 <input type="datetime-local" name="to" class="form-control" value="@(ViewBag.To?.ToString("yyyy-MM-ddTHH:mm"))" />
             </div>
+            
             <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary me-2">Фильтр</button>
-                <a href="@Url.Action("Index")" class="btn btn-secondary">Сброс</a>
+                <button type="submit" class="btn btn-primary me-2">Применить фильтры</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Сбросить</a>
             </div>
         </form>
     </div>
@@ -37,26 +67,93 @@
 <!-- Пагинация -->
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        Страница @ViewBag.CurrentPage из @ViewBag.TotalPages (всего записей: @ViewBag.TotalItems)
+        <strong>Страница @ViewBag.CurrentPage из @ViewBag.TotalPages</strong> 
+        <span class="text-muted">(всего записей: @ViewBag.TotalItems)</span>
     </div>
     <div>
         @if (ViewBag.CurrentPage > 1)
         {
-            <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1, userName = ViewBag.UserName, action = ViewBag.Action, from = ViewBag.From, to = ViewBag.To })" 
-               class="btn btn-sm btn-outline-primary">Предыдущая</a>
+            <a href="@Url.Action("Index", new { 
+                page = ViewBag.CurrentPage - 1, 
+                userName = ViewBag.UserName, 
+                ipAddress = ViewBag.IpAddress,
+                from = ViewBag.From, 
+                to = ViewBag.To 
+            })" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-chevron-left"></i> Предыдущая
+            </a>
         }
+        
+        <span class="mx-2">
+            @{
+                var startPage = Math.Max(1, ViewBag.CurrentPage - 2);
+                var endPage = Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2);
+                
+                for (int i = startPage; i <= endPage; i++)
+                {
+                    if (i == ViewBag.CurrentPage)
+                    {
+                        <span class="btn btn-sm btn-primary mx-1 disabled">@i</span>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Index", new { 
+                            page = i, 
+                            userName = ViewBag.UserName, 
+                            ipAddress = ViewBag.IpAddress,
+                            from = ViewBag.From, 
+                            to = ViewBag.To 
+                        })" class="btn btn-sm btn-outline-primary mx-1">@i</a>
+                    }
+                }
+            }
+        </span>
+        
         @if (ViewBag.CurrentPage < ViewBag.TotalPages)
         {
-            <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1, userName = ViewBag.UserName, action = ViewBag.Action, from = ViewBag.From, to = ViewBag.To })" 
-               class="btn btn-sm btn-outline-primary">Следующая</a>
+            <a href="@Url.Action("Index", new { 
+                page = ViewBag.CurrentPage + 1, 
+                userName = ViewBag.UserName, 
+                ipAddress = ViewBag.IpAddress,
+                from = ViewBag.From, 
+                to = ViewBag.To 
+            })" class="btn btn-sm btn-outline-primary">
+                Следующая <i class="bi bi-chevron-right"></i>
+            </a>
         }
     </div>
 </div>
 
+<!-- Информация о примененных фильтрах -->
+@if (!string.IsNullOrEmpty(ViewBag.UserName) || !string.IsNullOrEmpty(ViewBag.IpAddress) || ViewBag.From != null || ViewBag.To != null)
+{
+    <div class="alert alert-info mb-3">
+        <strong>Применены фильтры:</strong>
+        <ul class="mb-0 mt-1">
+            @if (!string.IsNullOrEmpty(ViewBag.UserName))
+            {
+                <li>Пользователь: <strong>@ViewBag.UserName</strong></li>
+            }
+            @if (!string.IsNullOrEmpty(ViewBag.IpAddress))
+            {
+                <li>IP адрес: <strong>@ViewBag.IpAddress</strong></li>
+            }
+            @if (ViewBag.From != null)
+            {
+                <li>С даты: <strong>@ViewBag.From.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</strong></li>
+            }
+            @if (ViewBag.To != null)
+            {
+                <li>По дату: <strong>@ViewBag.To.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</strong></li>
+            }
+        </ul>
+    </div>
+}
+
 <!-- Таблица с логами -->
 <div class="table-responsive">
     <table class="table table-striped table-hover">
-        <thead>
+        <thead class="table-dark">
             <tr>
                 <th>Время</th>
                 <th>Пользователь</th>
@@ -66,7 +163,7 @@
                 <th>Статус</th>
                 <th>Время (мс)</th>
                 <th>IP адрес</th>
-                <th></th>
+                <th>Действия</th>
             </tr>
         </thead>
         <tbody>
@@ -74,17 +171,29 @@
             {
                 <tr>
                     <td>@log.Timestamp.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")</td>
-                    <td>@log.UserName</td>
+                    <td>
+                        <span class="fw-bold">@log.UserName</span>
+                        <br />
+                        <small class="text-muted">ID: @log.UserId</small>
+                    </td>
                     <td>
                         <span class="fw-bold">@log.Action</span>
-                        <br />
-                        <small class="text-muted">@log.Details</small>
+                        @if (!string.IsNullOrEmpty(log.Details) && log.Details != "No parameters")
+                        {
+                            <br />
+                            <small class="text-muted">@log.Details</small>
+                        }
                     </td>
                     <td>
-                        <span class="badge bg-info">@log.HttpMethod</span>
+                        <span class="badge @(log.HttpMethod == "GET" ? "bg-info" : 
+                                            log.HttpMethod == "POST" ? "bg-success" : 
+                                            log.HttpMethod == "PUT" ? "bg-warning" : 
+                                            log.HttpMethod == "DELETE" ? "bg-danger" : "bg-secondary")">
+                            @log.HttpMethod
+                        </span>
                     </td>
                     <td>
-                        <small>@log.Url</small>
+                        <small class="text-break">@log.Url</small>
                         @if (log.TargetId.HasValue)
                         {
                             <br />
@@ -101,10 +210,19 @@
                             <span class="badge bg-danger">Ошибка</span>
                         }
                     </td>
-                    <td>@log.ExecutionTimeMs</td>
-                    <td><small>@log.IpAddress</small></td>
+                    <td class="text-end">@log.ExecutionTimeMs</td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@log.Id" class="btn btn-sm btn-info">Детали</a>
+                        <small>@(log.IpAddress ?? "—")</small>
+                        @if (!string.IsNullOrEmpty(log.UserAgent))
+                        {
+                            <br />
+                            <small class="text-muted" title="@log.UserAgent">@(log.UserAgent.Length > 30 ? log.UserAgent.Substring(0, 27) + "..." : log.UserAgent)</small>
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@log.Id" class="btn btn-sm btn-info">
+                            <i class="bi bi-eye"></i> Детали
+                        </a>
                     </td>
                 </tr>
             }
@@ -114,5 +232,71 @@
 
 @if (!Model.Any())
 {
-    <div class="alert alert-info">Записи не найдены</div>
+    <div class="alert alert-warning text-center py-4">
+        <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+        <h4 class="mt-2">Записи не найдены</h4>
+        <p>Попробуйте изменить параметры фильтрации или сбросить фильтры.</p>
+    </div>
+}
+
+<!-- Нижняя пагинация -->
+@if (ViewBag.TotalPages > 1)
+{
+    <div class="d-flex justify-content-center mt-3">
+        <nav>
+            <ul class="pagination">
+                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { 
+                        page = ViewBag.CurrentPage - 1, 
+                        userName = ViewBag.UserName, 
+                        ipAddress = ViewBag.IpAddress,
+                        from = ViewBag.From, 
+                        to = ViewBag.To 
+                    })">«</a>
+                </li>
+                
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    if (i == 1 || i == ViewBag.TotalPages || (i >= ViewBag.CurrentPage - 2 && i <= ViewBag.CurrentPage + 2))
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { 
+                                page = i, 
+                                userName = ViewBag.UserName, 
+                                ipAddress = ViewBag.IpAddress,
+                                from = ViewBag.From, 
+                                to = ViewBag.To 
+                            })">@i</a>
+                        </li>
+                    }
+                    else if (i == ViewBag.CurrentPage - 3 || i == ViewBag.CurrentPage + 3)
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    }
+                }
+                
+                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { 
+                        page = ViewBag.CurrentPage + 1, 
+                        userName = ViewBag.UserName, 
+                        ipAddress = ViewBag.IpAddress,
+                        from = ViewBag.From, 
+                        to = ViewBag.To 
+                    })">»</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Добавляем иконки Bootstrap Icons если их нет
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css';
+        document.head.appendChild(link);
+    </script>
 }
