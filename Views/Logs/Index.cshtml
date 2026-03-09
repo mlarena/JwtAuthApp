@@ -1,0 +1,118 @@
+@model IEnumerable<JwtAuthApp.Models.UserActionLog>
+
+@{
+    ViewData["Title"] = "Журнал действий пользователей";
+}
+
+<h2>Журнал действий пользователей</h2>
+
+<!-- Форма фильтрации -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Имя пользователя</label>
+                <input type="text" name="userName" class="form-control" value="@ViewBag.UserName" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Действие</label>
+                <input type="text" name="action" class="form-control" value="@ViewBag.Action" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">С даты</label>
+                <input type="datetime-local" name="from" class="form-control" value="@(ViewBag.From?.ToString("yyyy-MM-ddTHH:mm"))" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">По дату</label>
+                <input type="datetime-local" name="to" class="form-control" value="@(ViewBag.To?.ToString("yyyy-MM-ddTHH:mm"))" />
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Фильтр</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Сброс</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Пагинация -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        Страница @ViewBag.CurrentPage из @ViewBag.TotalPages (всего записей: @ViewBag.TotalItems)
+    </div>
+    <div>
+        @if (ViewBag.CurrentPage > 1)
+        {
+            <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1, userName = ViewBag.UserName, action = ViewBag.Action, from = ViewBag.From, to = ViewBag.To })" 
+               class="btn btn-sm btn-outline-primary">Предыдущая</a>
+        }
+        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+        {
+            <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1, userName = ViewBag.UserName, action = ViewBag.Action, from = ViewBag.From, to = ViewBag.To })" 
+               class="btn btn-sm btn-outline-primary">Следующая</a>
+        }
+    </div>
+</div>
+
+<!-- Таблица с логами -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Время</th>
+                <th>Пользователь</th>
+                <th>Действие</th>
+                <th>Метод</th>
+                <th>URL</th>
+                <th>Статус</th>
+                <th>Время (мс)</th>
+                <th>IP адрес</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in Model)
+            {
+                <tr>
+                    <td>@log.Timestamp.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")</td>
+                    <td>@log.UserName</td>
+                    <td>
+                        <span class="fw-bold">@log.Action</span>
+                        <br />
+                        <small class="text-muted">@log.Details</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-info">@log.HttpMethod</span>
+                    </td>
+                    <td>
+                        <small>@log.Url</small>
+                        @if (log.TargetId.HasValue)
+                        {
+                            <br />
+                            <span class="badge bg-secondary">ID: @log.TargetId</span>
+                        }
+                    </td>
+                    <td>
+                        @if (log.IsSuccess)
+                        {
+                            <span class="badge bg-success">Успех</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Ошибка</span>
+                        }
+                    </td>
+                    <td>@log.ExecutionTimeMs</td>
+                    <td><small>@log.IpAddress</small></td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@log.Id" class="btn btn-sm btn-info">Детали</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Записи не найдены</div>
+}

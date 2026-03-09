@@ -6,6 +6,7 @@ using JwtAuthApp.Data;
 using JwtAuthApp.Services;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
+using JwtAuthApp.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,11 +53,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddControllersWithViews()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+// Настройка MVC с глобальным фильтром логирования
+builder.Services.AddControllersWithViews(options =>
+{
+    // Добавляем фильтр логирования глобально
+    options.Filters.Add<UserActionLogFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
+// Не забудьте зарегистрировать фильтр как Scoped
+builder.Services.AddScoped<UserActionLogFilter>();
 
 // Добавляем CORS
 builder.Services.AddCors(options =>
