@@ -11,8 +11,10 @@ using JwtAuthApp.Filters;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+}, ServiceLifetime.Scoped);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -97,7 +99,7 @@ builder.Services.AddAntiforgery(options =>
 
 // Добавляем Swagger
 builder.Services.AddEndpointsApiExplorer();
-
+builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
 
 // Настройка миграций базы данных
