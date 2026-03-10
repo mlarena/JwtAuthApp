@@ -1,0 +1,298 @@
+@model JwtAuthApp.ViewModels.AuditIndexViewModel
+@using JwtAuthApp.ViewModels
+
+@{
+    ViewData["Title"] = "Аудит (действия + изменения)";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Аудит</h2>
+        <div class="text-muted">Единый журнал действий пользователей и изменений данных</div>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary" id="toggleColumnsBtn">
+            Показать все столбцы
+        </button>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Index")">Сбросить</a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Тип</label>
+                <select class="form-select" name="type">
+                    <option value="">Все</option>
+                    <option value="@AuditLogType.Action" selected="@(Model.Type == AuditLogType.Action)">Действия</option>
+                    <option value="@AuditLogType.Change" selected="@(Model.Type == AuditLogType.Change)">Изменения</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Пользователь</label>
+                <select class="form-select" name="userName">
+                    <option value="">Все</option>
+                    @foreach (var u in Model.UserNames)
+                    {
+                        <option value="@u" selected="@(Model.UserName == u)">@u</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">IP адрес (только действия)</label>
+                <select class="form-select" name="ipAddress">
+                    <option value="">Все</option>
+                    @foreach (var ip in Model.IpAddresses)
+                    {
+                        <option value="@ip" selected="@(Model.IpAddress == ip)">@ip</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Сущность (только изменения)</label>
+                <select class="form-select" name="entityType">
+                    <option value="">Все</option>
+                    @foreach (var t in Model.EntityTypes)
+                    {
+                        <option value="@t" selected="@(Model.EntityType == t)">@t</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Тип изменения (только изменения)</label>
+                <select class="form-select" name="changeType">
+                    <option value="">Все</option>
+                    @foreach (var t in Model.ChangeTypes)
+                    {
+                        <option value="@t" selected="@(Model.ChangeType == t)">@t</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">С даты</label>
+                <input type="datetime-local" name="from" class="form-control" value="@(Model.From?.ToString("yyyy-MM-ddTHH:mm"))" />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">По дату</label>
+                <input type="datetime-local" name="to" class="form-control" value="@(Model.To?.ToString("yyyy-MM-ddTHH:mm"))" />
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Применить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Paging header -->
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+        <strong>Страница @Model.Page из @Model.TotalPages</strong>
+        <span class="text-muted">(всего: @Model.TotalItems)</span>
+    </div>
+    <div class="d-flex gap-2">
+        @if (Model.Page > 1)
+        {
+            <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Index", new {
+                page = Model.Page - 1,
+                type = Model.Type,
+                userName = Model.UserName,
+                ipAddress = Model.IpAddress,
+                entityType = Model.EntityType,
+                changeType = Model.ChangeType,
+                from = Model.From,
+                to = Model.To
+            })">Предыдущая</a>
+        }
+        @if (Model.Page < Model.TotalPages)
+        {
+            <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Index", new {
+                page = Model.Page + 1,
+                type = Model.Type,
+                userName = Model.UserName,
+                ipAddress = Model.IpAddress,
+                entityType = Model.EntityType,
+                changeType = Model.ChangeType,
+                from = Model.From,
+                to = Model.To
+            })">Следующая</a>
+        }
+    </div>
+</div>
+
+<!-- Table -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Время</th>
+                <th>Тип</th>
+                <th>Пользователь</th>
+                <th>Сводка</th>
+                <th class="col-extra d-none">Метод</th>
+                <th class="col-extra d-none">URL</th>
+                <th class="col-extra d-none">IP</th>
+                <th class="col-extra d-none">Статус</th>
+                <th class="col-extra d-none">Время (мс)</th>
+                <th class="col-extra d-none">Сущность</th>
+                <th class="col-extra d-none">EntityId</th>
+                <th class="col-extra d-none">ChangeType</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var row in Model.Items)
+        {
+            <tr>
+                <td>@row.TimestampUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")</td>
+                <td>
+                    @if (row.Type == AuditLogType.Action)
+                    {
+                        <span class="badge bg-info">Действие</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Изменение</span>
+                    }
+                </td>
+                <td>
+                    <span class="fw-bold">@(row.UserName ?? "System")</span>
+                    @if (row.UserId.HasValue)
+                    {
+                        <div class="text-muted small">ID: @row.UserId</div>
+                    }
+                </td>
+                <td>
+                    @if (row.Type == AuditLogType.Action)
+                    {
+                        <div class="fw-bold">@row.ActionName</div>
+                        @if (!string.IsNullOrEmpty(row.Details) && row.Details != "No parameters")
+                        {
+                            <div class="text-muted small">@row.Details</div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="fw-bold">@row.EntityType</div>
+                        <div class="text-muted small">@row.ChangeType @(row.EntityId?.ToString() ?? "—")</div>
+                    }
+                </td>
+
+                <td class="col-extra d-none">
+                    @if (row.Type == AuditLogType.Action)
+                    {
+                        <span class="badge @(row.HttpMethod == "GET" ? "bg-info" :
+                                            row.HttpMethod == "POST" ? "bg-success" :
+                                            row.HttpMethod == "PUT" ? "bg-warning" :
+                                            row.HttpMethod == "DELETE" ? "bg-danger" : "bg-secondary")">
+                            @row.HttpMethod
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
+                <td class="col-extra d-none">
+                    @if (row.Type == AuditLogType.Action)
+                    {
+                        <small class="text-break">@row.Url</small>
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
+                <td class="col-extra d-none">
+                    @if (row.Type == AuditLogType.Action)
+                    {
+                        <small>@(row.IpAddress ?? "—")</small>
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
+                <td class="col-extra d-none">
+                    @if (row.Type == AuditLogType.Action)
+                    {
+                        @if (row.IsSuccess == true)
+                        {
+                            <span class="badge bg-success">OK</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">ERR</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
+                <td class="col-extra d-none text-end">
+                    @if (row.Type == AuditLogType.Action)
+                    {
+                        @row.ExecutionTimeMs
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
+                <td class="col-extra d-none">@((row.Type == AuditLogType.Change) ? row.EntityType : "—")</td>
+                <td class="col-extra d-none">@((row.Type == AuditLogType.Change) ? (row.EntityId?.ToString() ?? "—") : "—")</td>
+                <td class="col-extra d-none">@((row.Type == AuditLogType.Change) ? row.ChangeType : "—")</td>
+                <td>
+                    <a class="btn btn-sm btn-info"
+                       asp-action="Details"
+                       asp-route-type="@row.Type"
+                       asp-route-id="@row.Id">
+                        Детали
+                    </a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Items.Any())
+{
+    <div class="alert alert-info">Записи не найдены</div>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var showingAll = false;
+            var btn = document.getElementById('toggleColumnsBtn');
+            var extras = document.querySelectorAll('.col-extra');
+
+            function setState(show) {
+                showingAll = show;
+                extras.forEach(function (el) {
+                    el.classList.toggle('d-none', !showingAll);
+                });
+                if (btn) btn.textContent = showingAll ? 'Скрыть дополнительные столбцы' : 'Показать все столбцы';
+            }
+
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    setState(!showingAll);
+                });
+            }
+
+            setState(false);
+        })();
+    </script>
+}
+

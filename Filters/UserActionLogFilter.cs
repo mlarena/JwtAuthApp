@@ -80,7 +80,9 @@ namespace JwtAuthApp.Filters
         {
             // Получаем информацию о пользователе
             var userIdClaim = context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userId = userIdClaim != null ? int.Parse(userIdClaim) : 0;
+            int? userId = null;
+            if (userIdClaim != null && int.TryParse(userIdClaim, out var parsed))
+                userId = parsed;
             var userName = context.HttpContext.User.Identity?.Name ?? "Unknown";
             
             // Получаем название контроллера и действия
@@ -102,8 +104,9 @@ namespace JwtAuthApp.Filters
             var isSuccess = resultContext.Exception == null || resultContext.ExceptionHandled;
 
             // Создаем запись лога
-            var log = new UserActionLog
+            var log = new AuditLog
             {
+                Type = AuditLogType.Action,
                 UserId = userId,
                 UserName = userName,
                 Action = $"{controllerName}.{actionName}",
@@ -118,7 +121,7 @@ namespace JwtAuthApp.Filters
                 ExecutionTimeMs = _stopwatch.ElapsedMilliseconds
             };
 
-            await _context.UserActionLogs.AddAsync(log);
+            await _context.AuditLogs.AddAsync(log);
             await _context.SaveChangesAsync();
         }
 

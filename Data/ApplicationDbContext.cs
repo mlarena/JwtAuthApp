@@ -4,6 +4,7 @@ using JwtAuthApp.Models;
 using System.Text.Json;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace JwtAuthApp.Data
 {
@@ -13,8 +14,7 @@ namespace JwtAuthApp.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<MonitoringPost> MonitoringPosts { get; set; } 
-        public DbSet<UserActionLog> UserActionLogs { get; set; }
-        public DbSet<EntityChangeLog> EntityChangeLogs { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
         
         // Конструктор с IHttpContextAccessor
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor httpContextAccessor)
@@ -42,46 +42,33 @@ namespace JwtAuthApp.Data
                 entity.Property(u => u.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
 
-            // Настройка таблицы логов действий
-            modelBuilder.Entity<UserActionLog>(entity =>
+            // Настройка таблицы аудита (действия + изменения)
+            modelBuilder.Entity<AuditLog>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 
+                entity.HasIndex(e => e.Timestamp);
+                entity.HasIndex(e => e.Type);
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => e.UserName);
-                entity.HasIndex(e => e.Timestamp);
                 entity.HasIndex(e => e.Action);
+                entity.HasIndex(e => e.EntityType);
+                entity.HasIndex(e => e.EntityId);
+                entity.HasIndex(e => e.ChangeType);
                 
-                entity.Property(e => e.Action).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Action).HasMaxLength(200);
                 entity.Property(e => e.Details).HasMaxLength(1000);
-                entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.UserName).HasMaxLength(100);
                 entity.Property(e => e.HttpMethod).HasMaxLength(10);
                 entity.Property(e => e.Url).HasMaxLength(500);
                 entity.Property(e => e.IpAddress).HasMaxLength(50);
                 entity.Property(e => e.UserAgent).HasMaxLength(500);
-                
-                entity.HasOne(e => e.User)
-                    .WithMany()
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.SetNull);
-            });
 
-            // Настройка таблицы логов изменений сущностей
-            modelBuilder.Entity<EntityChangeLog>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                
-                entity.HasIndex(e => e.EntityId);
-                entity.HasIndex(e => e.EntityType);
-                entity.HasIndex(e => e.ChangeType);
-                entity.HasIndex(e => e.Timestamp);
-                
-                entity.Property(e => e.EntityType).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.ChangeType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.EntityType).HasMaxLength(200);
+                entity.Property(e => e.ChangeType).HasMaxLength(50);
                 entity.Property(e => e.OriginalValues).HasColumnType("jsonb");
                 entity.Property(e => e.NewValues).HasColumnType("jsonb");
                 entity.Property(e => e.ChangedProperties).HasColumnType("jsonb");
-                entity.Property(e => e.UserName).HasMaxLength(100);
                 
                 entity.HasOne(e => e.User)
                     .WithMany()
@@ -109,43 +96,46 @@ namespace JwtAuthApp.Data
                 .Where(e => e.State == EntityState.Added || 
                            e.State == EntityState.Modified || 
                            e.State == EntityState.Deleted)
+                .Where(e => e.Entity is not AuditLog) // не логируем аудит-логи
                 .ToList();
 
-            // Список для логов изменений
-            var changeLogs = new List<EntityChangeLog>();
+            // Список для аудита изменений
+            var changeAuditLogs = new List<AuditLog>();
 
             // Логируем изменения
             foreach (var entry in entries)
             {
-                var log = CreateEntityChangeLog(entry, userName, userId);
+                var log = CreateChangeAuditLog(entry, userName, userId);
                 if (log != null)
                 {
-                    changeLogs.Add(log);
+                    changeAuditLogs.Add(log);
                 }
             }
 
             // Добавляем логи в контекст
-            foreach (var log in changeLogs)
+            foreach (var log in changeAuditLogs)
             {
-                await EntityChangeLogs.AddAsync(log, cancellationToken);
+                await AuditLogs.AddAsync(log, cancellationToken);
             }
 
             // Сохраняем все изменения (включая логи)
             return await base.SaveChangesAsync(cancellationToken);
         }
 
-        private EntityChangeLog? CreateEntityChangeLog(EntityEntry entry, string? userName, int? userId)
+        private AuditLog? CreateChangeAuditLog(EntityEntry entry, string? userName, int? userId)
         {
             var entityType = entry.Entity.GetType().Name;
             var entityId = GetEntityId(entry);
             
-            // Пропускаем логирование самих логов
-            if (entityType.Contains("Log"))
+            // Пропускаем логирование сущности аудита (и любых сущностей логов, если останутся)
+            if (entityType.Contains("Log", StringComparison.OrdinalIgnoreCase) ||
+                entityType.Contains("Audit", StringComparison.OrdinalIgnoreCase))
                 return null;
 
             var changeType = entry.State.ToString();
-            var log = new EntityChangeLog
+            var log = new AuditLog
             {
+                Type = AuditLogType.Change,
                 EntityType = entityType,
                 EntityId = entityId,
                 ChangeType = changeType,
