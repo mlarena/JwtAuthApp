@@ -3,21 +3,26 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JwtAuthApp.Models
 {
-    [Table("Roles")]
-    public class Role
+    [Table("ControllerAccess")]
+    public class ControllerAccess
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
-        [StringLength(50)]
-        public string Name { get; set; } = string.Empty;
+        [StringLength(100)]
+        public string ControllerName { get; set; } = string.Empty;
 
-        [StringLength(255)]
+        [Required]
+        [StringLength(100)]
+        public string DisplayName { get; set; } = string.Empty;
+
+        [StringLength(500)]
         public string? Description { get; set; }
 
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public bool AllowAllAuthenticated { get; set; }
+
         public ICollection<ControllerAccessRole> ControllerAccessRoles { get; set; } = new List<ControllerAccessRole>();
     }
 }

@@ -8,7 +8,7 @@ using JwtAuthApp.Services;
 
 namespace JwtAuthApp.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;

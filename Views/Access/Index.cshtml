@@ -1,0 +1,128 @@
+@model IEnumerable<JwtAuthApp.Models.ControllerAccess>
+
+@{
+    ViewData["Title"] = "Access Control";
+    var allRoles = ViewBag.AllRoles as IEnumerable<JwtAuthApp.Models.Role> ?? Enumerable.Empty<JwtAuthApp.Models.Role>();
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="bi bi-key"></i> Access Control</h2>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        Configure which roles can access each controller. <strong>AllowAll</strong> means any logged-in user can access.
+        If specific roles are selected, only users with those roles can access.
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Controller</th>
+                        <th>Display Name</th>
+                        <th>Access Mode</th>
+                        <th>Allowed Roles</th>
+                        <th style="width:180px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><code>@item.ControllerName</code></td>
+                            <td><strong>@item.DisplayName</strong></td>
+                            <td>
+                                @if (item.AllowAllAuthenticated)
+                                {
+                                    <span class="badge bg-success">All Authenticated</span>
+                                }
+                                else if (item.ControllerAccessRoles.Any())
+                                {
+                                    <span class="badge bg-warning text-dark">Role Restricted</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">No Rules</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.AllowAllAuthenticated)
+                                {
+                                    <span class="text-muted">All users</span>
+                                }
+                                else if (item.ControllerAccessRoles.Any())
+                                {
+                                    @foreach (var cr in item.ControllerAccessRoles)
+                                    {
+                                        <span class="badge bg-info me-1 d-inline-flex align-items-center">
+                                            @cr.Role.Name
+                                            <form asp-action="QuickToggle" method="post" class="d-inline ms-1" style="display:inline!important;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <input type="hidden" name="roleName" value="@cr.Role.Name" />
+                                                <input type="hidden" name="addRole" value="false" />
+                                                <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent text-white" title="Remove" style="line-height:1;font-size:0.7rem;">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </form>
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" title="Add role">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            @foreach (var role in allRoles.Where(r => !item.ControllerAccessRoles.Any(cr => cr.RoleId == r.Id)))
+                                            {
+                                                <li>
+                                                    <form asp-action="QuickToggle" method="post">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@item.Id" />
+                                                        <input type="hidden" name="roleName" value="@role.Name" />
+                                                        <input type="hidden" name="addRole" value="true" />
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="bi bi-plus-circle text-success me-1"></i> @role.Name
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                    <form asp-action="ToggleAllowAll" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm @(item.AllowAllAuthenticated ? "btn-success" : "btn-outline-secondary")" title="Toggle AllowAll">
+                                            <i class="bi bi-globe"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

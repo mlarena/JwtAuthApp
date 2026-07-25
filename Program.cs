@@ -186,6 +186,57 @@ using (var scope = app.Services.CreateScope())
             dbContext.SaveChanges();
         }
     }
+
+    // Seed ControllerAccess если таблица пуста
+    if (!dbContext.ControllerAccesses.Any())
+    {
+        var adminRoleForSeed = dbContext.Roles.FirstOrDefault(r => r.Name == "Admin");
+        var userRoleForSeed = dbContext.Roles.FirstOrDefault(r => r.Name == "User");
+
+        var accessEntries = new List<JwtAuthApp.Models.ControllerAccess>();
+
+        void AddAccess(string controller, string display, string? desc, bool allowAll, string[]? roleNames)
+        {
+            var entry = new JwtAuthApp.Models.ControllerAccess
+            {
+                ControllerName = controller,
+                DisplayName = display,
+                Description = desc,
+                AllowAllAuthenticated = allowAll
+            };
+            accessEntries.Add(entry);
+        }
+
+        AddAccess("Secure", "Secure", "Protected page", false, new[] { "User", "Admin" });
+        AddAccess("Test", "Test", "Test page", false, new[] { "User", "Admin" });
+        AddAccess("MonitoringPost", "MonitoringPost", "Monitoring posts CRUD", false, new[] { "User", "Admin" });
+        AddAccess("Sensor", "Sensors", "Sensors CRUD", false, new[] { "User", "Admin" });
+        AddAccess("DataIWS", "DataIWS", "Data IWS CRUD", false, new[] { "User", "Admin" });
+        AddAccess("Admin", "Users", "User management", true, null);
+        AddAccess("Role", "Roles", "Role management", true, null);
+        AddAccess("Access", "Access Control", "Controller access rules", true, null);
+        AddAccess("Audit", "Audit Log", "System audit log", true, null);
+
+        dbContext.ControllerAccesses.AddRange(accessEntries);
+        dbContext.SaveChanges();
+
+        // Назначаем роли к записям
+        foreach (var entry in accessEntries)
+        {
+            var saved = dbContext.ControllerAccesses.First(c => c.ControllerName == entry.ControllerName);
+            if (entry.AllowAllAuthenticated)
+            {
+                // AllowAll — не привязываем роли
+                continue;
+            }
+            // Привязываем все роли (User + Admin)
+            if (adminRoleForSeed != null)
+                dbContext.ControllerAccessRoles.Add(new JwtAuthApp.Models.ControllerAccessRole { ControllerAccessId = saved.Id, RoleId = adminRoleForSeed.Id });
+            if (userRoleForSeed != null)
+                dbContext.ControllerAccessRoles.Add(new JwtAuthApp.Models.ControllerAccessRole { ControllerAccessId = saved.Id, RoleId = userRoleForSeed.Id });
+        }
+        dbContext.SaveChanges();
+    }
 }
 
 // Конфигурация пайплайна
@@ -215,6 +266,7 @@ app.UseMiddleware<SessionTokenMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseMiddleware<ControllerAccessMiddleware>();
 app.UseMiddleware<AuthRedirectMiddleware>();
 
 // Настройка маршрутов

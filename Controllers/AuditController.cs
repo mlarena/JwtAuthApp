@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JwtAuthApp.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize]
 public sealed class AuditController : Controller
 {
     private readonly ApplicationDbContext _context;

@@ -19,6 +19,8 @@ namespace JwtAuthApp.Data
         public DbSet<MonitoringPost> MonitoringPosts { get; set; }
         public DbSet<Sensor> Sensors { get; set; }
         public DbSet<DataIWS> DataIWS { get; set; }
+        public DbSet<ControllerAccess> ControllerAccesses { get; set; }
+        public DbSet<ControllerAccessRole> ControllerAccessRoles { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         
         // Конструктор с IHttpContextAccessor
@@ -67,6 +69,31 @@ namespace JwtAuthApp.Data
 
                 entity.HasOne(ur => ur.Role)
                     .WithMany(r => r.UserRoles)
+                    .HasForeignKey(ur => ur.RoleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Настройка таблицы ControllerAccess
+            modelBuilder.Entity<ControllerAccess>(entity =>
+            {
+                entity.HasIndex(e => e.ControllerName).IsUnique();
+                entity.Property(e => e.ControllerName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500);
+            });
+
+            // Настройка таблицы ControllerAccessRoles (связь many-to-many)
+            modelBuilder.Entity<ControllerAccessRole>(entity =>
+            {
+                entity.HasKey(ur => new { ur.ControllerAccessId, ur.RoleId });
+
+                entity.HasOne(ur => ur.ControllerAccess)
+                    .WithMany(c => c.ControllerAccessRoles)
+                    .HasForeignKey(ur => ur.ControllerAccessId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ur => ur.Role)
+                    .WithMany(r => r.ControllerAccessRoles)
                     .HasForeignKey(ur => ur.RoleId)
                     .OnDelete(DeleteBehavior.Cascade);
             });

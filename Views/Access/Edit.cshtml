@@ -1,0 +1,123 @@
+@model JwtAuthApp.ViewModels.ControllerAccessEditViewModel
+
+@{
+    ViewData["Title"] = $"Edit Access — {Model.DisplayName}";
+}
+
+<div class="container mt-4">
+    <h2><i class="bi bi-key"></i> Edit Access: @Model.DisplayName</h2>
+
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ControllerName" />
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Controller Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Controller Name</label>
+                            <input class="form-control" value="@Model.ControllerName" disabled />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="DisplayName" class="form-label fw-bold"></label>
+                            <input asp-for="DisplayName" class="form-control" />
+                            <span asp-validation-for="DisplayName" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold"></label>
+                            <input asp-for="Description" class="form-control" />
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input asp-for="AllowAllAuthenticated" class="form-check-input" id="allowAllCheck" />
+                            <label asp-for="AllowAllAuthenticated" class="form-check-label" for="allowAllCheck">
+                                <strong>Allow All Authenticated Users</strong>
+                            </label>
+                            <div class="form-text">If enabled, any logged-in user can access this controller regardless of roles.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4" id="rolesCard">
+                    <div class="card-header">
+                        <h5 class="mb-0">Allowed Roles</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @for (int i = 0; i < Model.Roles.Count; i++)
+                            {
+                                <input type="hidden" asp-for="Roles[i].RoleId" />
+                                <input type="hidden" asp-for="Roles[i].RoleName" />
+                                <div class="col-md-4">
+                                    <div class="form-check mb-2">
+                                        <input asp-for="Roles[i].IsSelected" class="form-check-input" />
+                                        <label class="form-check-label" for="Roles_@(i)__IsSelected">
+                                            <strong>@Model.Roles[i].RoleName</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-lg"></i> Save Changes
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Preview panel -->
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-eye"></i> Preview</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Controller:</strong> <code>@Model.ControllerName</code></p>
+                    <p><strong>Display:</strong> @Model.DisplayName</p>
+                    <p>
+                        <strong>Mode:</strong>
+                        @if (Model.AllowAllAuthenticated)
+                        {
+                            <span class="badge bg-success">All Authenticated</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Role Restricted</span>
+                        }
+                    </p>
+                    <p><strong>Allowed Roles:</strong></p>
+                    @if (Model.Roles.Any(r => r.IsSelected))
+                    {
+                        @foreach (var r in Model.Roles.Where(r => r.IsSelected))
+                        {
+                            <span class="badge bg-info me-1">@r.RoleName</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-muted">None selected</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('allowAllCheck').addEventListener('change', function () {
+            document.getElementById('rolesCard').style.opacity = this.checked ? '0.5' : '1';
+        });
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}

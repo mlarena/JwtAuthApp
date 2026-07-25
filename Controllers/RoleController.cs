@@ -6,7 +6,7 @@ using JwtAuthApp.Models;
 
 namespace JwtAuthApp.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class RoleController : Controller
     {
         private readonly ApplicationDbContext _context;

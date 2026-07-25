@@ -1,0 +1,31 @@
+@model IEnumerable<JwtAuthApp.ViewComponents.MenuItemViewModel>
+
+@foreach (var item in Model)
+{
+    @if (item.IsDropdown)
+    {
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi @item.Icon"></i> @item.Text
+            </a>
+            <ul class="dropdown-menu">
+                @foreach (var child in item.Children)
+                {
+                    <li>
+                        <a class="dropdown-item" asp-controller="@child.Controller" asp-action="@child.Action">
+                            <i class="bi @child.Icon me-1"></i> @child.Text
+                        </a>
+                    </li>
+                }
+            </ul>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-controller="@item.Controller" asp-action="@item.Action">
+                <i class="bi @item.Icon"></i> @item.Text
+            </a>
+        </li>
+    }
+}
