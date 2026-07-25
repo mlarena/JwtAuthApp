@@ -1,0 +1,46 @@
+@model JwtAuthApp.Models.Role
+
+@{
+    ViewData["Title"] = "Delete Role";
+}
+
+<h2>Delete Role</h2>
+
+<div class="alert alert-danger">
+    <h4>Are you sure you want to delete this role?</h4>
+    @if (Model.UserRoles.Any())
+    {
+        <p class="mb-0"><strong>Warning:</strong> This role is assigned to @Model.UserRoles.Count user(s). They will lose this role's permissions.</p>
+    }
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@(Model.Description ?? "-")</dd>
+
+            <dt class="col-sm-3">Users with this role</dt>
+            <dd class="col-sm-9">
+                @if (Model.UserRoles.Any())
+                {
+                    @string.Join(", ", Model.UserRoles.Select(ur => ur.User.UserName))
+                }
+                else
+                {
+                    <span class="text-muted">None</span>
+                }
+            </dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

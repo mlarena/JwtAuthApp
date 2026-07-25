@@ -14,6 +14,8 @@ namespace JwtAuthApp.Data
         private bool _isSavingAuditLogs;
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<MonitoringPost> MonitoringPosts { get; set; }
         public DbSet<Sensor> Sensors { get; set; }
         public DbSet<DataIWS> DataIWS { get; set; }
@@ -43,6 +45,30 @@ namespace JwtAuthApp.Data
                 entity.Property(u => u.UserName).IsRequired().HasMaxLength(100);
                 entity.Property(u => u.Role).IsRequired().HasMaxLength(50);
                 entity.Property(u => u.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            });
+
+            // Настройка таблицы Roles
+            modelBuilder.Entity<Role>(entity =>
+            {
+                entity.HasIndex(r => r.Name).IsUnique();
+                entity.Property(r => r.Name).IsRequired().HasMaxLength(50);
+                entity.Property(r => r.Description).HasMaxLength(255);
+            });
+
+            // Настройка таблицы UserRoles (связь many-to-many)
+            modelBuilder.Entity<UserRole>(entity =>
+            {
+                entity.HasKey(ur => new { ur.UserId, ur.RoleId });
+
+                entity.HasOne(ur => ur.User)
+                    .WithMany(u => u.UserRoles)
+                    .HasForeignKey(ur => ur.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ur => ur.Role)
+                    .WithMany(r => r.UserRoles)
+                    .HasForeignKey(ur => ur.RoleId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Настройка таблицы Sensors

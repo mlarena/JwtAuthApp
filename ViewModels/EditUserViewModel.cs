@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace JwtAuthApp.ViewModels
 {
@@ -8,11 +8,6 @@ namespace JwtAuthApp.ViewModels
 
         [Required]
         [StringLength(100, ErrorMessage = "Username cannot be longer than 100 characters.")]
-        public string UserName { get; set; } 
-
-        [Required]
-        [StringLength(50, ErrorMessage = "Role cannot be longer than 50 characters.")]
-        public string Role { get; set; }
-
+        public string UserName { get; set; } = string.Empty;
     }
 }

@@ -120,13 +120,23 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.Migrate();
-    
+
+    // Создаем роли, если их нет
+    if (!dbContext.Roles.Any())
+    {
+        dbContext.Roles.AddRange(
+            new JwtAuthApp.Models.Role { Name = "Admin", Description = "System administrator" },
+            new JwtAuthApp.Models.Role { Name = "User", Description = "Regular user" }
+        );
+        dbContext.SaveChanges();
+    }
+
     // Создаем суперпользователя, если его нет
     if (!dbContext.Users.Any(u => u.UserName == "su"))
     {
         var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         var (hash, salt) = authService.HashPassword("su");
-        
+
         var superUser = new JwtAuthApp.Models.User
         {
             UserName = "su",
@@ -134,9 +144,47 @@ using (var scope = app.Services.CreateScope())
             Salt = salt,
             Role = "Admin"
         };
-        
+
         dbContext.Users.Add(superUser);
         dbContext.SaveChanges();
+
+        // Назначаем роль Admin
+        var adminRole = dbContext.Roles.FirstOrDefault(r => r.Name == "Admin");
+        if (adminRole != null)
+        {
+            dbContext.UserRoles.Add(new JwtAuthApp.Models.UserRole
+            {
+                UserId = superUser.Id,
+                RoleId = adminRole.Id
+            });
+            dbContext.SaveChanges();
+        }
+    }
+
+    // Назначаем роли существующим пользователям, у которых нет UserRole записей
+    var usersWithoutRoles = dbContext.Users
+        .Where(u => !dbContext.UserRoles.Any(ur => ur.UserId == u.Id))
+        .ToList();
+    if (usersWithoutRoles.Any())
+    {
+        var userRole = dbContext.Roles.FirstOrDefault(r => r.Name == "User");
+        var adminRole = dbContext.Roles.FirstOrDefault(r => r.Name == "Admin");
+        if (userRole != null)
+        {
+            foreach (var u in usersWithoutRoles)
+            {
+                var roleToAssign = u.Role == "Admin" ? adminRole : userRole;
+                if (roleToAssign != null)
+                {
+                    dbContext.UserRoles.Add(new JwtAuthApp.Models.UserRole
+                    {
+                        UserId = u.Id,
+                        RoleId = roleToAssign.Id
+                    });
+                }
+            }
+            dbContext.SaveChanges();
+        }
     }
 }
 

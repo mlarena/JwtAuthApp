@@ -33,7 +33,10 @@ namespace JwtAuthApp.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == model.UserName);
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.UserName == model.UserName);
 
             if (user == null || !_authService.VerifyPassword(model.Password, user.PasswordHash, user.Salt))
             {
@@ -68,11 +71,26 @@ namespace JwtAuthApp.Controllers
                 UserName = model.UserName,
                 PasswordHash = hash,
                 Salt = salt,
-                Role = string.IsNullOrEmpty(model.Role) ? "User" : model.Role
+                Role = "User"
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+
+            // Назначаем роль "User" по умолчанию
+            var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
+            if (userRole != null)
+            {
+                _context.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = userRole.Id });
+                await _context.SaveChangesAsync();
+            }
+
+            // Загружаем роли для генерации токена
+            await _context.Entry(user)
+                .Collection(u => u.UserRoles)
+                .Query()
+                .Include(ur => ur.Role)
+                .LoadAsync();
 
             var token = _authService.GenerateJwtToken(user);
             HttpContext.Session.SetString("JWToken", token);

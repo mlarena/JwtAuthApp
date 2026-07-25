@@ -26,16 +26,27 @@ namespace JwtAuthApp.Services
         {
             try
             {
-                var claims = new[]
+                var claims = new List<Claim>
                 {
                     new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                    new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName), // Изменено с Username на UserName
+                    new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.UserName), // Изменено с Username на UserName
-                    new Claim(ClaimTypes.Role, user.Role),
+                    new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
                 };
+
+                // Добавляем claim для каждой роли пользователя
+                foreach (var userRole in user.UserRoles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
+                }
+
+                // Обратная совместимость: если UserRoles пусто, используем поле Role
+                if (!user.UserRoles.Any())
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, user.Role));
+                }
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
                     _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured")));
