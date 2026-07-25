@@ -1,147 +1,110 @@
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.EntityFrameworkCore;
 using JwtAuthApp.Data;
 using JwtAuthApp.Models;
 using JwtAuthApp.Attributes;
 using System.Security.Claims;
 using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 
 namespace JwtAuthApp.Filters
 {
-    /// <summary>
-    /// Фильтр для глобального логирования действий пользователей
-    /// </summary>
     public class UserActionLogFilter : IAsyncActionFilter
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<UserActionLogFilter> _logger;
-        private readonly Stopwatch _stopwatch;
 
         public UserActionLogFilter(ApplicationDbContext context, ILogger<UserActionLogFilter> logger)
         {
             _context = context;
             _logger = logger;
-            _stopwatch = new Stopwatch();
         }
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            _stopwatch.Start();
-
-            // Проверяем, нужно ли пропустить логирование
             if (ShouldSkipLogging(context))
             {
                 await next();
                 return;
             }
 
-            // Выполняем действие
+            var stopwatch = Stopwatch.StartNew();
             var resultContext = await next();
-            _stopwatch.Stop();
+            stopwatch.Stop();
 
-            // Логируем только для авторизованных пользователей
-            if (context.HttpContext.User.Identity?.IsAuthenticated == true)
+            if (context.HttpContext.User.Identity?.IsAuthenticated != true)
+                return;
+
+            try
             {
-                try
-                {
-                    await LogUserAction(context, resultContext);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Ошибка при логировании действия пользователя");
-                }
+                var log = BuildActionLog(context, resultContext, stopwatch.ElapsedMilliseconds);
+                _context.AuditLogs.Add(log);
+                // Контроллер сам вызовет SaveChangesAsync() — лог сохранится вместе с бизнес-данными
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating action log entry");
             }
         }
 
         private bool ShouldSkipLogging(ActionExecutingContext context)
         {
-            // Проверяем наличие атрибута SkipLogging на контроллере
             var controllerHasSkip = context.Controller.GetType()
                 .GetCustomAttributes(typeof(SkipLoggingAttribute), true)
                 .Any();
 
-            // Проверяем наличие атрибута SkipLogging на действии
             var actionHasSkip = context.ActionDescriptor.EndpointMetadata
                 .Any(em => em.GetType() == typeof(SkipLoggingAttribute));
 
-            // Пропускаем статические файлы
-            var path = context.HttpContext.Request.Path.Value ?? "";
-            if (path.StartsWith("/css") || path.StartsWith("/js") || 
-                path.StartsWith("/lib") || path.StartsWith("/images"))
-            {
+            if (controllerHasSkip || actionHasSkip)
                 return true;
-            }
 
-            return controllerHasSkip || actionHasSkip;
+            var path = context.HttpContext.Request.Path.Value ?? "";
+            return path.StartsWith("/css") || path.StartsWith("/js") ||
+                   path.StartsWith("/lib") || path.StartsWith("/images");
         }
 
-        private async Task LogUserAction(ActionExecutingContext context, ActionExecutedContext resultContext)
+        private AuditLog BuildActionLog(ActionExecutingContext context, ActionExecutedContext resultContext, long elapsedMs)
         {
-            // Получаем информацию о пользователе
             var userIdClaim = context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            int? userId = null;
-            if (userIdClaim != null && int.TryParse(userIdClaim, out var parsed))
-                userId = parsed;
-            var userName = context.HttpContext.User.Identity?.Name ?? "Unknown";
-            
-            // Получаем название контроллера и действия
+            int.TryParse(userIdClaim, out var userId);
+
             var controllerName = context.RouteData.Values["controller"]?.ToString() ?? "Unknown";
             var actionName = context.RouteData.Values["action"]?.ToString() ?? "Unknown";
-            
-            // Формируем детальную информацию
-            var details = BuildActionDetails(context);
-            
-            // Получаем ID из маршрута
-            int? targetId = null;
-            if (context.RouteData.Values["id"] != null)
-            {
-                int.TryParse(context.RouteData.Values["id"]?.ToString(), out var id);
-                targetId = id;
-            }
 
-            // Определяем успешность выполнения
-            var isSuccess = resultContext.Exception == null || resultContext.ExceptionHandled;
+            int.TryParse(context.RouteData.Values["id"]?.ToString(), out var targetId);
 
-            // Создаем запись лога
-            var log = new AuditLog
+            return new AuditLog
             {
                 Type = AuditLogType.Action,
-                UserId = userId,
-                UserName = userName,
+                UserId = userId > 0 ? userId : null,
+                UserName = context.HttpContext.User.Identity?.Name ?? "Unknown",
                 Action = $"{controllerName}.{actionName}",
-                Details = details,
-                TargetId = targetId,
+                Details = BuildActionDetails(context),
+                TargetId = targetId > 0 ? targetId : null,
                 HttpMethod = context.HttpContext.Request.Method,
                 Url = context.HttpContext.Request.Path.Value ?? "",
                 IpAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString(),
                 UserAgent = context.HttpContext.Request.Headers["User-Agent"].ToString(),
                 Timestamp = DateTime.UtcNow,
-                IsSuccess = isSuccess,
-                ExecutionTimeMs = _stopwatch.ElapsedMilliseconds
+                IsSuccess = resultContext.Exception == null || resultContext.ExceptionHandled,
+                ExecutionTimeMs = elapsedMs
             };
-
-            await _context.AuditLogs.AddAsync(log);
-            await _context.SaveChangesAsync();
         }
 
-        private string BuildActionDetails(ActionExecutingContext context)
+        private static string BuildActionDetails(ActionExecutingContext context)
         {
             var details = new List<string>();
 
             foreach (var param in context.ActionArguments)
             {
-                // Пропускаем чувствительные данные
-                if (param.Key.ToLower().Contains("password") || 
-                    param.Key.ToLower().Contains("token") ||
-                    param.Key.ToLower().Contains("secret"))
+                if (param.Key.Contains("password", StringComparison.OrdinalIgnoreCase) ||
+                    param.Key.Contains("token", StringComparison.OrdinalIgnoreCase) ||
+                    param.Key.Contains("secret", StringComparison.OrdinalIgnoreCase))
                 {
                     details.Add($"{param.Key}=[HIDDEN]");
                     continue;
                 }
 
-                if (param.Value != null && param.Value.GetType().IsClass && 
-                    param.Value.GetType() != typeof(string))
+                if (param.Value != null && param.Value.GetType().IsClass && param.Value.GetType() != typeof(string))
                 {
                     details.Add($"{param.Key}=[{param.Value.GetType().Name}]");
                 }
@@ -149,9 +112,7 @@ namespace JwtAuthApp.Filters
                 {
                     var value = param.Value.ToString();
                     if (value?.Length > 50)
-                    {
-                        value = value.Substring(0, 47) + "...";
-                    }
+                        value = value[..47] + "...";
                     details.Add($"{param.Key}={value}");
                 }
                 else
