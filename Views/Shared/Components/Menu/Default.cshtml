@@ -4,16 +4,19 @@
 {
     @if (item.IsDropdown)
     {
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi @item.Icon"></i> @item.Text
-            </a>
-            <ul class="dropdown-menu">
+        <li class="sidebar-item">
+            <button class="sidebar-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#submenu-@item.Text.Replace(" ", "")" aria-expanded="false">
+                <i class="bi @item.Icon"></i>
+                <span>@item.Text</span>
+                <i class="bi bi-chevron-right chevron"></i>
+            </button>
+            <ul class="submenu collapse list-unstyled" id="submenu-@item.Text.Replace(" ", "")">
                 @foreach (var child in item.Children)
                 {
-                    <li>
-                        <a class="dropdown-item" asp-controller="@child.Controller" asp-action="@child.Action">
-                            <i class="bi @child.Icon me-1"></i> @child.Text
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" asp-controller="@child.Controller" asp-action="@child.Action">
+                            <i class="bi @child.Icon"></i>
+                            <span class="link-text">@child.Text</span>
                         </a>
                     </li>
                 }
@@ -22,9 +25,10 @@
     }
     else
     {
-        <li class="nav-item">
-            <a class="nav-link text-dark" asp-controller="@item.Controller" asp-action="@item.Action">
-                <i class="bi @item.Icon"></i> @item.Text
+        <li class="sidebar-item">
+            <a class="sidebar-link" asp-controller="@item.Controller" asp-action="@item.Action">
+                <i class="bi @item.Icon"></i>
+                <span class="link-text">@item.Text</span>
             </a>
         </li>
     }
