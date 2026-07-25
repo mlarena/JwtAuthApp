@@ -7,6 +7,7 @@ using JwtAuthApp.Services;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using JwtAuthApp.Filters;
+using JwtAuthApp.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,16 +37,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnChallenge = context =>
             {
-                // Пропускаем дефолтную логику
                 context.HandleResponse();
-                
-                // Перенаправляем на страницу логина
+
+                if (context.Request.Headers.ContainsKey("Accept") &&
+                    context.Request.Headers["Accept"].ToString().Contains("application/json"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    context.Response.ContentType = "application/json";
+                    return context.Response.WriteAsJsonAsync(new { error = "Unauthorized" });
+                }
+
                 context.Response.Redirect("/Auth/Login");
                 return Task.CompletedTask;
             },
             OnForbidden = context =>
             {
-                // Перенаправляем на страницу логина при недостаточных правах
+                if (context.Request.Headers.ContainsKey("Accept") &&
+                    context.Request.Headers["Accept"].ToString().Contains("application/json"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    context.Response.ContentType = "application/json";
+                    return context.Response.WriteAsJsonAsync(new { error = "Forbidden" });
+                }
+
                 context.Response.Redirect("/Auth/Login");
                 return Task.CompletedTask;
             }
@@ -97,8 +111,7 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
-// Добавляем Swagger
-builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
 
@@ -149,77 +162,12 @@ app.UseRouting();
 app.UseCors("AllowAll");
 app.UseSession();
 
-// Middleware для добавления токена в заголовок
-app.Use(async (context, next) =>
-{
-    var token = context.Session.GetString("JWToken");
-    if (!string.IsNullOrEmpty(token))
-    {
-        context.Request.Headers["Authorization"] = "Bearer " + token;
-    }
-    await next();
-});
+app.UseMiddleware<SessionTokenMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
-// Middleware для обработки 404 ошибок
-app.Use(async (context, next) =>
-{
-    await next();
-    
-    if (context.Response.StatusCode == 404 && !context.User.Identity?.IsAuthenticated == true)
-    {
-        context.Response.Redirect("/Auth/Login");
-    }
-    else if (context.Response.StatusCode == 404 && context.User.Identity?.IsAuthenticated == true)
-    {
-        context.Response.Redirect("/Home/Index");
-    }
-});
-// Middleware для обработки маршрутов
-app.Use(async (context, next) =>
-{
-    // Пропускаем запросы к статическим файлам
-    if (context.Request.Path.StartsWithSegments("/css") ||
-        context.Request.Path.StartsWithSegments("/js") ||
-        context.Request.Path.StartsWithSegments("/lib"))
-    {
-        await next();
-        return;
-    }
 
-    // Обработка пустого маршрута Auth
-    if (context.Request.Path.Equals("/Auth") || 
-        context.Request.Path.Equals("/Auth/"))
-    {
-        context.Response.Redirect("/Auth/Login");
-        return;
-    }
-
-    // Проверяем, является ли запрос POST запросом на Logout
-    bool isLogoutPost = context.Request.Method == "POST" && 
-                        context.Request.Path.Equals("/Auth/Logout");
-
-    // Если пользователь не авторизован и пытается получить доступ не к Auth контроллеру
-    if (!context.User.Identity?.IsAuthenticated == true && 
-        !context.Request.Path.StartsWithSegments("/Auth") &&
-        !isLogoutPost)
-    {
-        context.Response.Redirect("/Auth/Login");
-        return;
-    }
-
-    // Если пользователь авторизован и пытается получить доступ к Auth контроллеру (кроме Logout)
-    if (context.User.Identity?.IsAuthenticated == true && 
-        context.Request.Path.StartsWithSegments("/Auth") &&
-        !context.Request.Path.Equals("/Auth/Logout"))
-    {
-        context.Response.Redirect("/Home/Index");
-        return;
-    }
-
-    await next();
-});
+app.UseMiddleware<AuthRedirectMiddleware>();
 
 // Настройка маршрутов
 app.MapControllerRoute(

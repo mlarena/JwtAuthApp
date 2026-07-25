@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using JwtAuthApp.Data;
 using JwtAuthApp.Services;
 using JwtAuthApp.Models;
-using System.ComponentModel.DataAnnotations;
+using JwtAuthApp.ViewModels;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
@@ -28,7 +28,7 @@ namespace JwtAuthApp.Controllers
         public IActionResult Login() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginModel model)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
@@ -51,7 +51,7 @@ namespace JwtAuthApp.Controllers
         public IActionResult Register() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
@@ -92,25 +92,5 @@ namespace JwtAuthApp.Controllers
             // Всегда перенаправляем на Login, независимо от статуса
             return RedirectToAction("Login");
         }
-    }
-
-    public class LoginModel
-    {
-        [Required]
-        public string UserName { get; set; }
-
-        [Required]
-        public string Password { get; set; }
-    }
-
-    public class RegisterModel
-    {
-        [Required]
-        public string UserName { get; set; }
-
-        [Required]
-        public string Password { get; set; }
-        
-        public string Role { get; set; }
     }
 }

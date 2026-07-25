@@ -11,9 +11,10 @@ namespace JwtAuthApp.Data
     public class ApplicationDbContext : DbContext
     {
         private readonly IHttpContextAccessor? _httpContextAccessor;
+        private bool _isSavingAuditLogs;
 
         public DbSet<User> Users { get; set; }
-        public DbSet<MonitoringPost> MonitoringPosts { get; set; } 
+        public DbSet<MonitoringPost> MonitoringPosts { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         
         // Конструктор с IHttpContextAccessor
@@ -79,47 +80,54 @@ namespace JwtAuthApp.Data
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            // Получаем информацию о пользователе
-            string? userName = null;
-            int? userId = null;
-            
-            if (_httpContextAccessor?.HttpContext?.User.Identity?.IsAuthenticated == true)
+            if (_isSavingAuditLogs)
             {
-                userName = _httpContextAccessor.HttpContext.User.Identity.Name;
-                var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && int.TryParse(userIdClaim, out var parsedUserId))
-                    userId = parsedUserId;
+                return await base.SaveChangesAsync(cancellationToken);
             }
 
-            // Отслеживаем изменения до сохранения
-            var entries = ChangeTracker.Entries()
-                .Where(e => e.State == EntityState.Added || 
-                           e.State == EntityState.Modified || 
-                           e.State == EntityState.Deleted)
-                .Where(e => e.Entity is not AuditLog) // не логируем аудит-логи
-                .ToList();
-
-            // Список для аудита изменений
-            var changeAuditLogs = new List<AuditLog>();
-
-            // Логируем изменения
-            foreach (var entry in entries)
+            _isSavingAuditLogs = true;
+            try
             {
-                var log = CreateChangeAuditLog(entry, userName, userId);
-                if (log != null)
+                string? userName = null;
+                int? userId = null;
+
+                if (_httpContextAccessor?.HttpContext?.User.Identity?.IsAuthenticated == true)
                 {
-                    changeAuditLogs.Add(log);
+                    userName = _httpContextAccessor.HttpContext.User.Identity.Name;
+                    var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (userIdClaim != null && int.TryParse(userIdClaim, out var parsedUserId))
+                        userId = parsedUserId;
                 }
-            }
 
-            // Добавляем логи в контекст
-            foreach (var log in changeAuditLogs)
+                var entries = ChangeTracker.Entries()
+                    .Where(e => e.State == EntityState.Added ||
+                               e.State == EntityState.Modified ||
+                               e.State == EntityState.Deleted)
+                    .Where(e => e.Entity is not AuditLog)
+                    .ToList();
+
+                var changeAuditLogs = new List<AuditLog>();
+
+                foreach (var entry in entries)
+                {
+                    var log = CreateChangeAuditLog(entry, userName, userId);
+                    if (log != null)
+                    {
+                        changeAuditLogs.Add(log);
+                    }
+                }
+
+                foreach (var log in changeAuditLogs)
+                {
+                    await AuditLogs.AddAsync(log, cancellationToken);
+                }
+
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+            finally
             {
-                await AuditLogs.AddAsync(log, cancellationToken);
+                _isSavingAuditLogs = false;
             }
-
-            // Сохраняем все изменения (включая логи)
-            return await base.SaveChangesAsync(cancellationToken);
         }
 
         private AuditLog? CreateChangeAuditLog(EntityEntry entry, string? userName, int? userId)
