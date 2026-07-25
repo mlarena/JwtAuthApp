@@ -1,0 +1,54 @@
+@model JwtAuthApp.Models.SensorResult
+
+@{
+    ViewData["Title"] = "Детали результата опроса";
+}
+
+<h2>Детали результата опроса</h2>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+
+            <dt class="col-sm-3">Датчик</dt>
+            <dd class="col-sm-9">@(Model.Sensor?.SerialNumber ?? $"Датчик #{Model.SensorId}")</dd>
+
+            <dt class="col-sm-3">Дата проверки</dt>
+            <dd class="col-sm-9">@Model.CheckedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">Код ответа</dt>
+            <dd class="col-sm-9">@Model.StatusCode</dd>
+
+            <dt class="col-sm-3">Время ответа (мс)</dt>
+            <dd class="col-sm-9">@Model.ResponseTimeMs</dd>
+
+            <dt class="col-sm-3">Успех</dt>
+            <dd class="col-sm-9">
+                @if (Model.IsSuccess)
+                {
+                    <span class="badge bg-success">Да</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Нет</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Сессия опроса</dt>
+            <dd class="col-sm-9">@(Model.PollingSessionId?.ToString().Substring(0, 8) + "..." ?? "—")</dd>
+
+            @if (!string.IsNullOrEmpty(Model.ResponseBody))
+            {
+                <dt class="col-sm-3">Тело ответа</dt>
+                <dd class="col-sm-9">
+                    <pre class="mb-0" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;">@Model.ResponseBody</pre>
+                </dd>
+            }
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    </div>
+</div>

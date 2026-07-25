@@ -1,31 +1,43 @@
 @model JwtAuthApp.Models.Sensor
 
 @{
-    ViewData["Title"] = "Данные датчика";
+    ViewData["Title"] = "Детали датчика";
 }
 
-<h2>Данные датчика</h2>
+<h2>Детали датчика</h2>
 
 <div class="card">
     <div class="card-body">
         <dl class="row">
-            <dt class="col-sm-3">Id</dt>
+            <dt class="col-sm-3">ID</dt>
             <dd class="col-sm-9">@Model.Id</dd>
 
-            <dt class="col-sm-3">Название</dt>
-            <dd class="col-sm-9">@Model.Name</dd>
+            <dt class="col-sm-3">Серийный номер</dt>
+            <dd class="col-sm-9">@Model.SerialNumber</dd>
 
-            <dt class="col-sm-3">Тип</dt>
-            <dd class="col-sm-9">@(Model.Type ?? "-")</dd>
+            <dt class="col-sm-3">Имя EndPoint</dt>
+            <dd class="col-sm-9">@Model.EndPointsName</dd>
 
-            <dt class="col-sm-3">Ед. измерения</dt>
-            <dd class="col-sm-9">@(Model.Unit ?? "-")</dd>
+            <dt class="col-sm-3">URL</dt>
+            <dd class="col-sm-9"><code>@Model.Url</code></dd>
 
-            <dt class="col-sm-3">Мин. значение</dt>
-            <dd class="col-sm-9">@(Model.MinValue?.ToString() ?? "-")</dd>
+            <dt class="col-sm-3">Тип датчика</dt>
+            <dd class="col-sm-9">@(Model.SensorType?.SensorTypeName ?? "—")</dd>
 
-            <dt class="col-sm-3">Макс. значение</dt>
-            <dd class="col-sm-9">@(Model.MaxValue?.ToString() ?? "-")</dd>
+            <dt class="col-sm-3">Пост мониторинга</dt>
+            <dd class="col-sm-9">@(Model.MonitoringPost?.Name ?? "Не привязан")</dd>
+
+            <dt class="col-sm-3">Координаты</dt>
+            <dd class="col-sm-9">
+                @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+                {
+                    <span>Широта: @Model.Latitude°, Долгота: @Model.Longitude°</span>
+                }
+                else
+                {
+                    <span class="text-muted">Не заданы</span>
+                }
+            </dd>
 
             <dt class="col-sm-3">Статус</dt>
             <dd class="col-sm-9">
@@ -39,11 +51,11 @@
                 }
             </dd>
 
-            <dt class="col-sm-3">Создан</dt>
-            <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+            <dt class="col-sm-3">Последняя активность</dt>
+            <dd class="col-sm-9">@(Model.LastActivityUTC?.ToString("dd.MM.yyyy HH:mm:ss") ?? "—")</dd>
 
-            <dt class="col-sm-3">Обновлён</dt>
-            <dd class="col-sm-9">@Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+            <dt class="col-sm-3">Создан</dt>
+            <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
         </dl>
     </div>
     <div class="card-footer">

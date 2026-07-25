@@ -1,0 +1,91 @@
+@model JwtAuthApp.Models.IWSData
+
+@{
+    ViewData["Title"] = "Детали записи IWS";
+}
+
+<h2>Детали записи IWS</h2>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+
+            <dt class="col-sm-3">Датчик</dt>
+            <dd class="col-sm-9">@(Model.Sensor?.SerialNumber ?? $"Датчик #{Model.SensorId}")</dd>
+
+            <dt class="col-sm-3">Дата получения</dt>
+            <dd class="col-sm-9">@Model.ReceivedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">Дата данных</dt>
+            <dd class="col-sm-9">@Model.DataTimestamp.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">Темп. окружающая</dt>
+            <dd class="col-sm-9">@(Model.EnvTemperature?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Влажность</dt>
+            <dd class="col-sm-9">@(Model.Humidity?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Точка росы</dt>
+            <dd class="col-sm-9">@(Model.DewPoint?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Давление (гПа)</dt>
+            <dd class="col-sm-9">@(Model.PressureHPa?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Давление QNH (гПа)</dt>
+            <dd class="col-sm-9">@(Model.PressureQNHHPa?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Давление (мм рт.ст.)</dt>
+            <dd class="col-sm-9">@(Model.PressureMmHg?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Скорость ветра</dt>
+            <dd class="col-sm-9">@(Model.WindSpeed?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Направление ветра</dt>
+            <dd class="col-sm-9">@(Model.WindDirection?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Звук ветра</dt>
+            <dd class="col-sm-9">@(Model.WindVSound?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Тип осадков</dt>
+            <dd class="col-sm-9">@(Model.PrecipitationType?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Интенсивность осадков</dt>
+            <dd class="col-sm-9">@(Model.PrecipitationIntensity?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Количество осадков</dt>
+            <dd class="col-sm-9">@(Model.PrecipitationQuantity?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">CO2</dt>
+            <dd class="col-sm-9">@(Model.CO2Level?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Напряжение</dt>
+            <dd class="col-sm-9">@(Model.SupplyVoltage?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Широта GPS</dt>
+            <dd class="col-sm-9">@(Model.Latitude?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Долгота GPS</dt>
+            <dd class="col-sm-9">@(Model.Longitude?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Высота</dt>
+            <dd class="col-sm-9">@(Model.Altitude?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">KSP</dt>
+            <dd class="col-sm-9">@(Model.KSP?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Скорость GPS</dt>
+            <dd class="col-sm-9">@(Model.GPSSpeed?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Сессия опроса</dt>
+            <dd class="col-sm-9">@(Model.PollingSessionId?.ToString().Substring(0, 8) + "..." ?? "—")</dd>
+
+            <dt class="col-sm-3">Пост мониторинга</dt>
+            <dd class="col-sm-9">@(Model.MonitoringPost?.Name ?? "—")</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    </div>
+</div>

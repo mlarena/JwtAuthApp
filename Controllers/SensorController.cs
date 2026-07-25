@@ -10,80 +10,84 @@ namespace JwtAuthApp.Controllers
     public class SensorController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<SensorController> _logger;
 
-        public SensorController(ApplicationDbContext context, ILogger<SensorController> logger)
+        public SensorController(ApplicationDbContext context)
         {
             _context = context;
-            _logger = logger;
         }
 
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var sensors = await _context.Sensors
+            var items = await _context.Sensors
+                .AsNoTracking()
+                .Include(s => s.SensorType)
+                .Include(s => s.MonitoringPost)
                 .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();
-            return View(sensors);
+            return View(items);
         }
 
-        public async Task<IActionResult> Details(int id)
+        [HttpGet]
+        public async Task<IActionResult> Create()
         {
-            var sensor = await _context.Sensors.FindAsync(id);
-            if (sensor == null) return NotFound();
-            return View(sensor);
-        }
-
-        public IActionResult Create()
-        {
-            return View(new Sensor());
+            ViewBag.SensorTypes = await _context.SensorTypes
+                .AsNoTracking()
+                .OrderBy(t => t.SensorTypeName)
+                .ToListAsync();
+            ViewBag.MonitoringPosts = await _context.MonitoringPosts
+                .AsNoTracking()
+                .Where(m => m.IsActive)
+                .OrderBy(m => m.Name)
+                .ToListAsync();
+            return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Sensor sensor)
+        public async Task<IActionResult> Create(Sensor model)
         {
-            if (sensor.MinValue.HasValue && sensor.MaxValue.HasValue && sensor.MinValue > sensor.MaxValue)
-            {
-                ModelState.AddModelError("", "Минимальное значение не может быть больше максимального.");
-            }
-
             if (ModelState.IsValid)
             {
-                try
-                {
-                    sensor.CreatedAt = DateTime.UtcNow;
-                    sensor.UpdatedAt = DateTime.UtcNow;
-                    _context.Sensors.Add(sensor);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = "Датчик успешно создан!";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error creating sensor");
-                    ModelState.AddModelError("", "Произошла ошибка при сохранении датчика.");
-                }
+                model.CreatedAt = DateTime.UtcNow;
+                _context.Sensors.Add(model);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Датчик успешно создан!";
+                return RedirectToAction(nameof(Index));
             }
-            return View(sensor);
+            ViewBag.SensorTypes = await _context.SensorTypes
+                .AsNoTracking()
+                .OrderBy(t => t.SensorTypeName)
+                .ToListAsync();
+            ViewBag.MonitoringPosts = await _context.MonitoringPosts
+                .AsNoTracking()
+                .Where(m => m.IsActive)
+                .OrderBy(m => m.Name)
+                .ToListAsync();
+            return View(model);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var sensor = await _context.Sensors.FindAsync(id);
-            if (sensor == null) return NotFound();
-            return View(sensor);
+            var item = await _context.Sensors.FindAsync(id);
+            if (item == null) return NotFound();
+            ViewBag.SensorTypes = await _context.SensorTypes
+                .AsNoTracking()
+                .OrderBy(t => t.SensorTypeName)
+                .ToListAsync();
+            ViewBag.MonitoringPosts = await _context.MonitoringPosts
+                .AsNoTracking()
+                .OrderBy(m => m.Name)
+                .ToListAsync();
+            return View(item);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Sensor sensor)
+        public async Task<IActionResult> Edit(int id, Sensor model)
         {
-            if (id != sensor.Id) return NotFound();
-
-            if (sensor.MinValue.HasValue && sensor.MaxValue.HasValue && sensor.MinValue > sensor.MaxValue)
-            {
-                ModelState.AddModelError("", "Минимальное значение не может быть больше максимального.");
-            }
+            if (id != model.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -92,13 +96,14 @@ namespace JwtAuthApp.Controllers
                     var existing = await _context.Sensors.FindAsync(id);
                     if (existing == null) return NotFound();
 
-                    existing.Name = sensor.Name;
-                    existing.Type = sensor.Type;
-                    existing.Unit = sensor.Unit;
-                    existing.MinValue = sensor.MinValue;
-                    existing.MaxValue = sensor.MaxValue;
-                    existing.IsActive = sensor.IsActive;
-                    existing.UpdatedAt = DateTime.UtcNow;
+                    existing.SensorTypeId = model.SensorTypeId;
+                    existing.MonitoringPostId = model.MonitoringPostId;
+                    existing.Longitude = model.Longitude;
+                    existing.Latitude = model.Latitude;
+                    existing.SerialNumber = model.SerialNumber;
+                    existing.EndPointsName = model.EndPointsName;
+                    existing.Url = model.Url;
+                    existing.IsActive = model.IsActive;
 
                     _context.Update(existing);
                     await _context.SaveChangesAsync();
@@ -111,30 +116,50 @@ namespace JwtAuthApp.Controllers
                         return NotFound();
                     throw;
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error updating sensor");
-                    ModelState.AddModelError("", "Произошла ошибка при обновлении датчика.");
-                }
             }
-            return View(sensor);
+            ViewBag.SensorTypes = await _context.SensorTypes
+                .AsNoTracking()
+                .OrderBy(t => t.SensorTypeName)
+                .ToListAsync();
+            ViewBag.MonitoringPosts = await _context.MonitoringPosts
+                .AsNoTracking()
+                .OrderBy(m => m.Name)
+                .ToListAsync();
+            return View(model);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var item = await _context.Sensors
+                .AsNoTracking()
+                .Include(s => s.SensorType)
+                .Include(s => s.MonitoringPost)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (item == null) return NotFound();
+            return View(item);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var sensor = await _context.Sensors.FindAsync(id);
-            if (sensor == null) return NotFound();
-            return View(sensor);
+            var item = await _context.Sensors
+                .AsNoTracking()
+                .Include(s => s.SensorType)
+                .Include(s => s.MonitoringPost)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (item == null) return NotFound();
+            return View(item);
         }
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var sensor = await _context.Sensors.FindAsync(id);
-            if (sensor != null)
+            var item = await _context.Sensors.FindAsync(id);
+            if (item != null)
             {
-                _context.Sensors.Remove(sensor);
+                _context.Sensors.Remove(item);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Датчик успешно удалён!";
             }
@@ -145,14 +170,14 @@ namespace JwtAuthApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleActive(int id)
         {
-            var sensor = await _context.Sensors.FindAsync(id);
-            if (sensor != null)
-            {
-                sensor.IsActive = !sensor.IsActive;
-                sensor.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-                TempData["Success"] = $"Датчик успешно {(sensor.IsActive ? "активирован" : "деактивирован")}!";
-            }
+            var item = await _context.Sensors.FindAsync(id);
+            if (item == null) return NotFound();
+
+            item.IsActive = !item.IsActive;
+            await _context.SaveChangesAsync();
+
+            var status = item.IsActive ? "активирован" : "деактивирован";
+            TempData["Success"] = $"Датчик \"{item.SerialNumber}\" {status}!";
             return RedirectToAction(nameof(Index));
         }
     }

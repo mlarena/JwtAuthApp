@@ -17,8 +17,15 @@ namespace JwtAuthApp.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<MonitoringPost> MonitoringPosts { get; set; }
+        public DbSet<SensorType> SensorTypes { get; set; }
         public DbSet<Sensor> Sensors { get; set; }
-        public DbSet<DataIWS> DataIWS { get; set; }
+        public DbSet<PollingSession> PollingSessions { get; set; }
+        public DbSet<DOVData> DOVDatas { get; set; }
+        public DbSet<DSPDData> DSPDDatas { get; set; }
+        public DbSet<DustData> DustDatas { get; set; }
+        public DbSet<IWSData> IWSDatas { get; set; }
+        public DbSet<MUEKSData> MUEKSDatas { get; set; }
+        public DbSet<SensorResult> SensorResults { get; set; }
         public DbSet<ControllerAccess> ControllerAccesses { get; set; }
         public DbSet<ControllerAccessRole> ControllerAccessRoles { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
@@ -98,24 +105,123 @@ namespace JwtAuthApp.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Настройка таблицы Sensors
+            // Настройка таблицы Sensor
             modelBuilder.Entity<Sensor>(entity =>
             {
-                entity.Property(s => s.Name).IsRequired().HasMaxLength(255);
-                entity.Property(s => s.Type).HasMaxLength(100);
-                entity.Property(s => s.Unit).HasMaxLength(50);
+                entity.Property(s => s.SerialNumber).IsRequired().HasMaxLength(64);
+                entity.Property(s => s.EndPointsName).IsRequired().HasMaxLength(255);
+                entity.Property(s => s.Url).IsRequired();
+
+                entity.HasOne(s => s.SensorType)
+                    .WithMany(t => t.Sensors)
+                    .HasForeignKey(s => s.SensorTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(s => s.MonitoringPost)
+                    .WithMany(m => m.Sensors)
+                    .HasForeignKey(s => s.MonitoringPostId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
-            // Настройка таблицы DataIWS
-            modelBuilder.Entity<DataIWS>(entity =>
+            // Настройка таблицы SensorType
+            modelBuilder.Entity<SensorType>(entity =>
             {
-                entity.HasOne(d => d.Sensor)
-                    .WithMany()
-                    .HasForeignKey(d => d.SensorId)
+                entity.HasIndex(t => t.SensorTypeName).IsUnique();
+                entity.Property(t => t.SensorTypeName).IsRequired().HasMaxLength(20);
+                entity.Property(t => t.Description).IsRequired();
+            });
+
+            // Настройка таблицы PollingSessions
+            modelBuilder.Entity<PollingSession>(entity =>
+            {
+                entity.HasOne(p => p.MonitoringPost)
+                    .WithMany(m => m.PollingSessions)
+                    .HasForeignKey(p => p.MonitoringPostId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasIndex(d => d.SensorId);
-                entity.HasIndex(d => d.RecordedAt);
+                entity.Property(p => p.Status).IsRequired().HasMaxLength(20);
+            });
+
+            // DOVData
+            modelBuilder.Entity<DOVData>(entity =>
+            {
+                entity.HasIndex(d => new { d.SensorId, d.DataTimestamp });
+                entity.HasIndex(d => d.DataTimestamp);
+                entity.HasIndex(d => d.VisibleRange);
+                entity.HasIndex(d => d.MonitoringPostId);
+                entity.HasIndex(d => d.PollingSessionId);
+
+                entity.HasOne(d => d.Sensor).WithMany(s => s.DOVDatas).HasForeignKey(d => d.SensorId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(d => d.PollingSession).WithMany(p => p.DOVDatas).HasForeignKey(d => d.PollingSessionId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(d => d.MonitoringPost).WithMany().HasForeignKey(d => d.MonitoringPostId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // DSPDData
+            modelBuilder.Entity<DSPDData>(entity =>
+            {
+                entity.HasIndex(d => new { d.SensorId, d.DataTimestamp });
+                entity.HasIndex(d => d.DataTimestamp);
+                entity.HasIndex(d => d.Grip);
+                entity.HasIndex(d => d.RoadStatus);
+                entity.HasIndex(d => d.MonitoringPostId);
+                entity.HasIndex(d => d.PollingSessionId);
+
+                entity.HasOne(d => d.Sensor).WithMany(s => s.DSPDDatas).HasForeignKey(d => d.SensorId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(d => d.PollingSession).WithMany(p => p.DSPDDatas).HasForeignKey(d => d.PollingSessionId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(d => d.MonitoringPost).WithMany().HasForeignKey(d => d.MonitoringPostId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // DustData
+            modelBuilder.Entity<DustData>(entity =>
+            {
+                entity.HasIndex(d => new { d.SensorId, d.DataTimestamp });
+                entity.HasIndex(d => d.DataTimestamp);
+                entity.HasIndex(d => d.MonitoringPostId);
+                entity.HasIndex(d => d.PollingSessionId);
+
+                entity.HasOne(d => d.Sensor).WithMany(s => s.DustDatas).HasForeignKey(d => d.SensorId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(d => d.PollingSession).WithMany(p => p.DustDatas).HasForeignKey(d => d.PollingSessionId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(d => d.MonitoringPost).WithMany().HasForeignKey(d => d.MonitoringPostId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // IWSData
+            modelBuilder.Entity<IWSData>(entity =>
+            {
+                entity.HasIndex(d => new { d.SensorId, d.DataTimestamp });
+                entity.HasIndex(d => d.DataTimestamp);
+                entity.HasIndex(d => new { d.EnvTemperature, d.Humidity, d.WindSpeed });
+                entity.HasIndex(d => d.MonitoringPostId);
+                entity.HasIndex(d => d.PollingSessionId);
+
+                entity.HasOne(d => d.Sensor).WithMany(s => s.IWSDatas).HasForeignKey(d => d.SensorId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(d => d.PollingSession).WithMany(p => p.IWSDatas).HasForeignKey(d => d.PollingSessionId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(d => d.MonitoringPost).WithMany().HasForeignKey(d => d.MonitoringPostId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // MUEKSData
+            modelBuilder.Entity<MUEKSData>(entity =>
+            {
+                entity.HasIndex(d => new { d.SensorId, d.DataTimestamp });
+                entity.HasIndex(d => d.DataTimestamp);
+                entity.HasIndex(d => d.VisibleRange);
+                entity.HasIndex(d => d.MonitoringPostId);
+                entity.HasIndex(d => d.PollingSessionId);
+
+                entity.HasOne(d => d.Sensor).WithMany(s => s.MUEKSDatas).HasForeignKey(d => d.SensorId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(d => d.PollingSession).WithMany(p => p.MUEKSDatas).HasForeignKey(d => d.PollingSessionId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(d => d.MonitoringPost).WithMany().HasForeignKey(d => d.MonitoringPostId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // SensorResults
+            modelBuilder.Entity<SensorResult>(entity =>
+            {
+                entity.HasIndex(r => r.SensorId);
+                entity.HasIndex(r => r.CheckedAt);
+                entity.HasIndex(r => r.IsSuccess);
+                entity.HasIndex(r => r.PollingSessionId);
+
+                entity.HasOne(r => r.Sensor).WithMany(s => s.SensorResults).HasForeignKey(r => r.SensorId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(r => r.PollingSession).WithMany(p => p.SensorResults).HasForeignKey(r => r.PollingSessionId).OnDelete(DeleteBehavior.SetNull);
             });
 
             // Настройка таблицы аудита (действия + изменения)

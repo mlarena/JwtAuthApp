@@ -22,8 +22,9 @@
     <thead>
         <tr>
             <th>Название</th>
-            <th>Описание</th>
+            <th>Адрес</th>
             <th>Координаты</th>
+            <th>Интервал</th>
             <th>Мобильный</th>
             <th>Статус</th>
             <th>Создан</th>
@@ -35,7 +36,7 @@
         {
             <tr class="@(item.IsActive ? "" : "table-secondary")">
                 <td>@item.Name</td>
-                <td>@(item.Description ?? "—")</td>
+                <td>@(item.Address ?? "—")</td>
                 <td>
                     @if (item.Latitude.HasValue && item.Longitude.HasValue)
                     {
@@ -46,6 +47,7 @@
                         <span class="text-muted">Нет координат</span>
                     }
                 </td>
+                <td>@item.PollingIntervalSeconds сек.</td>
                 <td>
                     @if (item.IsMobile)
                     {

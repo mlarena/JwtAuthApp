@@ -1,0 +1,85 @@
+@model JwtAuthApp.Models.MUEKSData
+
+@{
+    ViewData["Title"] = "Детали записи MUEKS";
+}
+
+<h2>Детали записи MUEKS</h2>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+
+            <dt class="col-sm-3">Датчик</dt>
+            <dd class="col-sm-9">@(Model.Sensor?.SerialNumber ?? $"Датчик #{Model.SensorId}")</dd>
+
+            <dt class="col-sm-3">Дата получения</dt>
+            <dd class="col-sm-9">@Model.ReceivedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">Дата данных</dt>
+            <dd class="col-sm-9">@Model.DataTimestamp.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">Темп. коробки</dt>
+            <dd class="col-sm-9">@(Model.TemperatureBox?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">U вход 12В</dt>
+            <dd class="col-sm-9">@(Model.UPowerIn12B?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">U выход 12В</dt>
+            <dd class="col-sm-9">@(Model.UOut12B?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">I выход 12В</dt>
+            <dd class="col-sm-9">@(Model.IOut12B?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">I выход 48В</dt>
+            <dd class="col-sm-9">@(Model.IOut48B?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">U аккумулятора</dt>
+            <dd class="col-sm-9">@(Model.UAkb?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">I аккумулятора</dt>
+            <dd class="col-sm-9">@(Model.IAkb?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">220В</dt>
+            <dd class="col-sm-9">@(Model.Sens220B?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Wh аккумулятора</dt>
+            <dd class="col-sm-9">@(Model.WhAkb?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Видимость</dt>
+            <dd class="col-sm-9">@(Model.VisibleRange?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Дверь</dt>
+            <dd class="col-sm-9">@(Model.DoorStatus?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">TdsH</dt>
+            <dd class="col-sm-9">@(Model.TdsH ?? "—")</dd>
+
+            <dt class="col-sm-3">TdsTds</dt>
+            <dd class="col-sm-9">@(Model.TdsTds ?? "—")</dd>
+
+            <dt class="col-sm-3">TkosaT1</dt>
+            <dd class="col-sm-9">@(Model.TkosaT1 ?? "—")</dd>
+
+            <dt class="col-sm-3">TkosaT3</dt>
+            <dd class="col-sm-9">@(Model.TkosaT3 ?? "—")</dd>
+
+            <dt class="col-sm-3">Owen Ch1</dt>
+            <dd class="col-sm-9">@(Model.OwenCh1?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Owen Ch2</dt>
+            <dd class="col-sm-9">@(Model.OwenCh2?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Сессия опроса</dt>
+            <dd class="col-sm-9">@(Model.PollingSessionId?.ToString().Substring(0, 8) + "..." ?? "—")</dd>
+
+            <dt class="col-sm-3">Пост мониторинга</dt>
+            <dd class="col-sm-9">@(Model.MonitoringPost?.Name ?? "—")</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    </div>
+</div>

@@ -18,6 +18,9 @@
             <dt class="col-sm-3">Описание</dt>
             <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Description) ? "Нет описания" : Model.Description)</dd>
 
+            <dt class="col-sm-3">Адрес</dt>
+            <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Address) ? "Не указан" : Model.Address)</dd>
+
             <dt class="col-sm-3">Координаты</dt>
             <dd class="col-sm-9">
                 @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
@@ -53,6 +56,12 @@
                     <span class="badge bg-danger">Неактивен</span>
                 }
             </dd>
+
+            <dt class="col-sm-3">Интервал опроса</dt>
+            <dd class="col-sm-9">@Model.PollingIntervalSeconds сек.</dd>
+
+            <dt class="col-sm-3">Последний опрос</dt>
+            <dd class="col-sm-9">@(Model.LastPolledAt?.ToString("dd.MM.yyyy HH:mm:ss") ?? "—")</dd>
 
             <dt class="col-sm-3">Создан</dt>
             <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>

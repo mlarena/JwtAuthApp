@@ -1,0 +1,75 @@
+@model IEnumerable<JwtAuthApp.Models.DustData>
+
+@{
+    ViewData["Title"] = "Данные пыли";
+}
+
+<h2>Данные пыли</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <span class="text-muted">Всего записей: @ViewBag.TotalItems</span>
+    </div>
+    <div>
+        <form asp-action="Index" method="get" class="d-flex gap-2">
+            <select name="sensorId" class="form-select" style="width: auto;">
+                <option value="">Все датчики</option>
+                @foreach (var sensor in (ViewBag.Sensors as IEnumerable<JwtAuthApp.Models.Sensor>) ?? Enumerable.Empty<JwtAuthApp.Models.Sensor>())
+                {
+                    <option value="@sensor.Id" selected="@(ViewBag.SelectedSensorId?.ToString() == sensor.Id.ToString())">@sensor.SerialNumber (@sensor.SensorType?.SensorTypeName)</option>
+                }
+            </select>
+            <button type="submit" class="btn btn-outline-secondary">Фильтр</button>
+            @if (ViewBag.SelectedSensorId != null)
+            {
+                <a asp-action="Index" class="btn btn-outline-danger">Сбросить</a>
+            }
+        </form>
+    </div>
+</div>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Датчик</th>
+            <th>Дата данных</th>
+            <th>PM10</th>
+            <th>PM2.5</th>
+            <th>PM1</th>
+            <th>Темп.</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@(item.Sensor?.SerialNumber ?? $"Датчик #{item.SensorId}")</td>
+                <td>@item.DataTimestamp.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                <td>@(item.PM10Act?.ToString() ?? "—")</td>
+                <td>@(item.PM25Act?.ToString() ?? "—")</td>
+                <td>@(item.PM1Act?.ToString() ?? "—")</td>
+                <td>@(item.TemperatureProbe?.ToString() ?? "—")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Подробнее</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if ((int)ViewBag.TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(i == (int)ViewBag.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-sensorId="@ViewBag.SelectedSensorId">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

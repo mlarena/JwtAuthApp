@@ -1,0 +1,29 @@
+@model JwtAuthApp.Models.SensorType
+
+@{
+    ViewData["Title"] = "Детали типа датчика";
+}
+
+<h2>Детали типа датчика</h2>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+
+            <dt class="col-sm-3">Название</dt>
+            <dd class="col-sm-9">@Model.SensorTypeName</dd>
+
+            <dt class="col-sm-3">Описание</dt>
+            <dd class="col-sm-9">@Model.Description</dd>
+
+            <dt class="col-sm-3">Создан</dt>
+            <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Редактировать</a>
+        <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    </div>
+</div>

@@ -1,10 +1,10 @@
 @model JwtAuthApp.Models.Sensor
 
 @{
-    ViewData["Title"] = "Удалить датчик";
+    ViewData["Title"] = "Удаление датчика";
 }
 
-<h2>Удалить датчик</h2>
+<h2>Удаление датчика</h2>
 
 <div class="alert alert-danger">
     <h4>Вы уверены, что хотите удалить этот датчик?</h4>
@@ -13,26 +13,23 @@
 <div class="card">
     <div class="card-body">
         <dl class="row">
-            <dt class="col-sm-3">Название</dt>
-            <dd class="col-sm-9">@Model.Name</dd>
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
 
-            <dt class="col-sm-3">Тип</dt>
-            <dd class="col-sm-9">@(Model.Type ?? "-")</dd>
+            <dt class="col-sm-3">Серийный номер</dt>
+            <dd class="col-sm-9">@Model.SerialNumber</dd>
 
-            <dt class="col-sm-3">Ед. измерения</dt>
-            <dd class="col-sm-9">@(Model.Unit ?? "-")</dd>
+            <dt class="col-sm-3">Имя EndPoint</dt>
+            <dd class="col-sm-9">@Model.EndPointsName</dd>
 
-            <dt class="col-sm-3">Диапазон</dt>
-            <dd class="col-sm-9">
-                @if (Model.MinValue.HasValue && Model.MaxValue.HasValue)
-                {
-                    <span>@Model.MinValue — @Model.MaxValue</span>
-                }
-                else
-                {
-                    <span class="text-muted">-</span>
-                }
-            </dd>
+            <dt class="col-sm-3">URL</dt>
+            <dd class="col-sm-9"><code>@Model.Url</code></dd>
+
+            <dt class="col-sm-3">Тип датчика</dt>
+            <dd class="col-sm-9">@(Model.SensorType?.SensorTypeName ?? "—")</dd>
+
+            <dt class="col-sm-3">Пост мониторинга</dt>
+            <dd class="col-sm-9">@(Model.MonitoringPost?.Name ?? "—")</dd>
 
             <dt class="col-sm-3">Статус</dt>
             <dd class="col-sm-9">@(Model.IsActive ? "Активен" : "Неактивен")</dd>

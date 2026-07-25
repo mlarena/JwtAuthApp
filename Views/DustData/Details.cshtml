@@ -1,0 +1,67 @@
+@model JwtAuthApp.Models.DustData
+
+@{
+    ViewData["Title"] = "Детали записи пыли";
+}
+
+<h2>Детали записи пыли</h2>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+
+            <dt class="col-sm-3">Датчик</dt>
+            <dd class="col-sm-9">@(Model.Sensor?.SerialNumber ?? $"Датчик #{Model.SensorId}")</dd>
+
+            <dt class="col-sm-3">Дата получения</dt>
+            <dd class="col-sm-9">@Model.ReceivedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">Дата данных</dt>
+            <dd class="col-sm-9">@Model.DataTimestamp.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">PM10 (акт.)</dt>
+            <dd class="col-sm-9">@(Model.PM10Act?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">PM2.5 (акт.)</dt>
+            <dd class="col-sm-9">@(Model.PM25Act?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">PM1 (акт.)</dt>
+            <dd class="col-sm-9">@(Model.PM1Act?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">PM10 (ср.)</dt>
+            <dd class="col-sm-9">@(Model.PM10AWG?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">PM2.5 (ср.)</dt>
+            <dd class="col-sm-9">@(Model.PM25AWG?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">PM1 (ср.)</dt>
+            <dd class="col-sm-9">@(Model.PM1AWG?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Поток датчика</dt>
+            <dd class="col-sm-9">@(Model.FlowProbe?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Темп. датчика</dt>
+            <dd class="col-sm-9">@(Model.TemperatureProbe?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Влажность</dt>
+            <dd class="col-sm-9">@(Model.HumidityProbe?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Статус лазера</dt>
+            <dd class="col-sm-9">@(Model.LaserStatus?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Напряжение</dt>
+            <dd class="col-sm-9">@(Model.SupplyVoltage?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Сессия опроса</dt>
+            <dd class="col-sm-9">@(Model.PollingSessionId?.ToString().Substring(0, 8) + "..." ?? "—")</dd>
+
+            <dt class="col-sm-3">Пост мониторинга</dt>
+            <dd class="col-sm-9">@(Model.MonitoringPost?.Name ?? "—")</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    </div>
+</div>

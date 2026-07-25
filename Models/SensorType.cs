@@ -3,25 +3,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JwtAuthApp.Models
 {
-    [Table("DataIWS")]
-    public class DataIWS
+    [Table("SensorType")]
+    public class SensorType
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
-        public int SensorId { get; set; }
+        [StringLength(20)]
+        public string SensorTypeName { get; set; } = string.Empty;
 
         [Required]
-        public double Value { get; set; }
+        public string Description { get; set; } = string.Empty;
 
-        public DateTime RecordedAt { get; set; } = DateTime.UtcNow;
-
-        [Column("CreatedAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey(nameof(SensorId))]
-        public Sensor? Sensor { get; set; }
+        public ICollection<Sensor> Sensors { get; set; } = new List<Sensor>();
     }
 }

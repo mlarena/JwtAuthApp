@@ -1,0 +1,88 @@
+@model JwtAuthApp.Models.DSPDData
+
+@{
+    ViewData["Title"] = "Детали записи DSPD";
+}
+
+<h2>Детали записи DSPD</h2>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+
+            <dt class="col-sm-3">Датчик</dt>
+            <dd class="col-sm-9">@(Model.Sensor?.SerialNumber ?? $"Датчик #{Model.SensorId}")</dd>
+
+            <dt class="col-sm-3">Дата получения</dt>
+            <dd class="col-sm-9">@Model.ReceivedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">Дата данных</dt>
+            <dd class="col-sm-9">@Model.DataTimestamp.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">Сцепление</dt>
+            <dd class="col-sm-9">@(Model.Grip?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Вибрация</dt>
+            <dd class="col-sm-9">@(Model.Shake?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Питание</dt>
+            <dd class="col-sm-9">@(Model.UPower?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Темп. корпуса</dt>
+            <dd class="col-sm-9">@(Model.TemperatureCase?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Темп. дор.</dt>
+            <dd class="col-sm-9">@(Model.TemperatureRoad?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Высота воды</dt>
+            <dd class="col-sm-9">@(Model.HeightH2O?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Высота льда</dt>
+            <dd class="col-sm-9">@(Model.HeightIce?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Высота снега</dt>
+            <dd class="col-sm-9">@(Model.HeightSnow?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">% Льда</dt>
+            <dd class="col-sm-9">@(Model.PercentICE?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">% PGM</dt>
+            <dd class="col-sm-9">@(Model.PercentPGM?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Статус дороги</dt>
+            <dd class="col-sm-9">@(Model.RoadStatus?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Угол к дороге</dt>
+            <dd class="col-sm-9">@(Model.AngleToRoad?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Темп. замерзания PGM</dt>
+            <dd class="col-sm-9">@(Model.TemperatureFreezePGM?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Калибровка</dt>
+            <dd class="col-sm-9">@(Model.NeedCalibration?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">GPS Широта</dt>
+            <dd class="col-sm-9">@(Model.GPSLatitude?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">GPS Долгота</dt>
+            <dd class="col-sm-9">@(Model.GPSLongitude?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Расст. до поверхности</dt>
+            <dd class="col-sm-9">@(Model.DistanceToSurface?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">GPS валиден</dt>
+            <dd class="col-sm-9">@(Model.IsGpsValid?.ToString() ?? "—")</dd>
+
+            <dt class="col-sm-3">Сессия опроса</dt>
+            <dd class="col-sm-9">@(Model.PollingSessionId?.ToString().Substring(0, 8) + "..." ?? "—")</dd>
+
+            <dt class="col-sm-3">Пост мониторинга</dt>
+            <dd class="col-sm-9">@(Model.MonitoringPost?.Name ?? "—")</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    </div>
+</div>

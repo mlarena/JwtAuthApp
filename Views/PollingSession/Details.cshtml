@@ -1,0 +1,60 @@
+@model JwtAuthApp.Models.PollingSession
+
+@{
+    ViewData["Title"] = "Детали сессии опроса";
+}
+
+<h2>Детали сессии опроса</h2>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9"><code>@Model.Id</code></dd>
+
+            <dt class="col-sm-3">Пост мониторинга</dt>
+            <dd class="col-sm-9">@(Model.MonitoringPost?.Name ?? "—")</dd>
+
+            <dt class="col-sm-3">Начало</dt>
+            <dd class="col-sm-9">@Model.StartedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">Завершение</dt>
+            <dd class="col-sm-9">@(Model.CompletedAt?.ToString("dd.MM.yyyy HH:mm:ss") ?? "—")</dd>
+
+            <dt class="col-sm-3">Статус</dt>
+            <dd class="col-sm-9">
+                @if (Model.Status == "COMPLETED")
+                {
+                    <span class="badge bg-success">Завершена</span>
+                }
+                else if (Model.Status == "IN_PROGRESS")
+                {
+                    <span class="badge bg-warning">В процессе</span>
+                }
+                else if (Model.Status == "FAILED")
+                {
+                    <span class="badge bg-danger">Ошибка</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">@Model.Status</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Всего датчиков</dt>
+            <dd class="col-sm-9">@Model.TotalSensorsCount</dd>
+
+            <dt class="col-sm-3">Успешных</dt>
+            <dd class="col-sm-9">@Model.SuccessfulSensorsCount</dd>
+
+            @if (!string.IsNullOrEmpty(Model.FailedSensorsDetails))
+            {
+                <dt class="col-sm-3">Детали ошибок</dt>
+                <dd class="col-sm-9"><pre class="mb-0" style="white-space: pre-wrap;">@Model.FailedSensorsDetails</pre></dd>
+            }
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    </div>
+</div>

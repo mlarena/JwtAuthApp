@@ -7,11 +7,11 @@ using JwtAuthApp.Models;
 namespace JwtAuthApp.Controllers
 {
     [Authorize]
-    public class MonitoringPostController : Controller
+    public class SensorTypeController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        public MonitoringPostController(ApplicationDbContext context)
+        public SensorTypeController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -19,9 +19,9 @@ namespace JwtAuthApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var items = await _context.MonitoringPosts
+            var items = await _context.SensorTypes
                 .AsNoTracking()
-                .OrderByDescending(m => m.CreatedAt)
+                .OrderBy(t => t.SensorTypeName)
                 .ToListAsync();
             return View(items);
         }
@@ -34,15 +34,14 @@ namespace JwtAuthApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(MonitoringPost model)
+        public async Task<IActionResult> Create(SensorType model)
         {
             if (ModelState.IsValid)
             {
                 model.CreatedAt = DateTime.UtcNow;
-                model.UpdatedAt = DateTime.UtcNow;
-                _context.MonitoringPosts.Add(model);
+                _context.SensorTypes.Add(model);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Пост мониторинга успешно создан!";
+                TempData["Success"] = "Тип датчика успешно создан!";
                 return RedirectToAction(nameof(Index));
             }
             return View(model);
@@ -51,14 +50,14 @@ namespace JwtAuthApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var item = await _context.MonitoringPosts.FindAsync(id);
+            var item = await _context.SensorTypes.FindAsync(id);
             if (item == null) return NotFound();
             return View(item);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, MonitoringPost model)
+        public async Task<IActionResult> Edit(int id, SensorType model)
         {
             if (id != model.Id) return NotFound();
 
@@ -66,27 +65,20 @@ namespace JwtAuthApp.Controllers
             {
                 try
                 {
-                    var existing = await _context.MonitoringPosts.FindAsync(id);
+                    var existing = await _context.SensorTypes.FindAsync(id);
                     if (existing == null) return NotFound();
 
-                    existing.Name = model.Name;
+                    existing.SensorTypeName = model.SensorTypeName;
                     existing.Description = model.Description;
-                    existing.Longitude = model.Longitude;
-                    existing.Latitude = model.Latitude;
-                    existing.IsMobile = model.IsMobile;
-                    existing.IsActive = model.IsActive;
-                    existing.Address = model.Address;
-                    existing.PollingIntervalSeconds = model.PollingIntervalSeconds;
-                    existing.UpdatedAt = DateTime.UtcNow;
 
                     _context.Update(existing);
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Пост мониторинга успешно обновлён!";
+                    TempData["Success"] = "Тип датчика успешно обновлён!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await _context.MonitoringPosts.AnyAsync(m => m.Id == id))
+                    if (!await _context.SensorTypes.AnyAsync(t => t.Id == id))
                         return NotFound();
                     throw;
                 }
@@ -97,9 +89,9 @@ namespace JwtAuthApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var item = await _context.MonitoringPosts
+            var item = await _context.SensorTypes
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(t => t.Id == id);
             if (item == null) return NotFound();
             return View(item);
         }
@@ -107,9 +99,9 @@ namespace JwtAuthApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var item = await _context.MonitoringPosts
+            var item = await _context.SensorTypes
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(t => t.Id == id);
             if (item == null) return NotFound();
             return View(item);
         }
@@ -118,29 +110,13 @@ namespace JwtAuthApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var item = await _context.MonitoringPosts.FindAsync(id);
+            var item = await _context.SensorTypes.FindAsync(id);
             if (item != null)
             {
-                _context.MonitoringPosts.Remove(item);
+                _context.SensorTypes.Remove(item);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Пост мониторинга успешно удалён!";
+                TempData["Success"] = "Тип датчика успешно удалён!";
             }
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ToggleActive(int id)
-        {
-            var item = await _context.MonitoringPosts.FindAsync(id);
-            if (item == null) return NotFound();
-
-            item.IsActive = !item.IsActive;
-            item.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-
-            var status = item.IsActive ? "активирован" : "деактивирован";
-            TempData["Success"] = $"Пост \"{item.Name}\" {status}!";
             return RedirectToAction(nameof(Index));
         }
     }
