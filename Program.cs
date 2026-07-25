@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using JwtAuthApp.Filters;
 using JwtAuthApp.Middleware;
+using JwtAuthApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -237,6 +238,9 @@ using (var scope = app.Services.CreateScope())
         }
         dbContext.SaveChanges();
     }
+
+    // Автообнаружение новых контроллеров
+    ControllerDiscoveryService.DiscoverAndRegister(app);
 }
 
 // Конфигурация пайплайна

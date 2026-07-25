@@ -42,7 +42,7 @@ namespace JwtAuthApp.Middleware
 
             if (access == null)
             {
-                await _next(context);
+                await DenyAccess(context, controllerName);
                 return;
             }
 
@@ -69,22 +69,27 @@ namespace JwtAuthApp.Middleware
 
             if (!userRoleNames.Any(ur => allowedRoleNames.Contains(ur)))
             {
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
-
-                if (context.Request.Headers.ContainsKey("Accept") &&
-                    context.Request.Headers["Accept"].ToString().Contains("application/json"))
-                {
-                    context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsJsonAsync(new { error = "Forbidden", controller = controllerName });
-                }
-                else
-                {
-                    context.Response.Redirect("/Home/Index");
-                }
+                await DenyAccess(context, controllerName);
                 return;
             }
 
             await _next(context);
+        }
+
+        private static async Task DenyAccess(HttpContext context, string controllerName)
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+
+            if (context.Request.Headers.ContainsKey("Accept") &&
+                context.Request.Headers["Accept"].ToString().Contains("application/json"))
+            {
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsJsonAsync(new { error = "Forbidden", controller = controllerName });
+            }
+            else
+            {
+                context.Response.Redirect("/Home/Index");
+            }
         }
     }
 }
