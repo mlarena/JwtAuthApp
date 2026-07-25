@@ -26,6 +26,9 @@ namespace JwtAuthApp.Controllers
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .ToListAsync();
+
+            ViewBag.AllRoles = await _context.Roles.OrderBy(r => r.Name).ToListAsync();
+
             return View(users);
         }
 
@@ -195,6 +198,57 @@ namespace JwtAuthApp.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.Id == id);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> QuickAddRole(int userId, string roleName)
+        {
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return NotFound();
+
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+            if (role == null) return NotFound();
+
+            if (!user.UserRoles.Any(ur => ur.RoleId == role.Id))
+            {
+                _context.UserRoles.Add(new UserRole { UserId = userId, RoleId = role.Id });
+                user.Role = roleName;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Role \"{roleName}\" added to {user.UserName}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> QuickRemoveRole(int userId, string roleName)
+        {
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return NotFound();
+
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+            if (role == null) return NotFound();
+
+            var userRole = user.UserRoles.FirstOrDefault(ur => ur.RoleId == role.Id);
+            if (userRole != null)
+            {
+                _context.UserRoles.Remove(userRole);
+
+                // Обновляем поле Role
+                var remainingRoles = user.UserRoles.Where(ur => ur.RoleId != role.Id).ToList();
+                user.Role = remainingRoles.FirstOrDefault()?.Role?.Name ?? "User";
+
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Role \"{roleName}\" removed from {user.UserName}";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

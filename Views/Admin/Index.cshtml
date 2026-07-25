@@ -21,29 +21,46 @@
     }
 
     <div class="card">
-        <div class="card-body">
-            <table class="table table-striped table-hover">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th>ID</th>
+                        <th style="width:60px">ID</th>
                         <th>Username</th>
                         <th>Roles</th>
-                        <th>Created At</th>
-                        <th>Actions</th>
+                        <th style="width:160px">Created</th>
+                        <th style="width:220px">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var user in Model)
                     {
                         <tr>
-                            <td>@user.Id</td>
-                            <td>@user.UserName</td>
+                            <td class="text-muted">@user.Id</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;font-size:0.8rem;">
+                                        @user.UserName[0].ToString().ToUpper()
+                                    </div>
+                                    <strong>@user.UserName</strong>
+                                </div>
+                            </td>
                             <td>
                                 @if (user.UserRoles.Any())
                                 {
                                     @foreach (var ur in user.UserRoles)
                                     {
-                                        <span class="badge bg-info me-1">@ur.Role.Name</span>
+                                        <span class="badge bg-info me-1 d-inline-flex align-items-center">
+                                            @ur.Role.Name
+                                            <form asp-action="QuickRemoveRole" method="post" class="d-inline ms-1" style="display:inline!important;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="userId" value="@user.Id" />
+                                                <input type="hidden" name="roleName" value="@ur.Role.Name" />
+                                                <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent text-white" title="Remove role" style="line-height:1;font-size:0.7rem;">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </form>
+                                        </span>
                                     }
                                 }
                                 else
@@ -51,20 +68,40 @@
                                     <span class="badge bg-secondary">No roles</span>
                                 }
                             </td>
-                            <td>@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-muted">@user.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
                             <td>
-                                <div class="btn-group" role="group">
-                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-primary" title="Edit">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-outline-primary" title="Edit username">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a asp-action="ManageRoles" asp-route-id="@user.Id" class="btn btn-sm btn-success" title="Manage Roles">
-                                        <i class="bi bi-shield-lock"></i>
+                                    <a asp-action="ManageRoles" asp-route-id="@user.Id" class="btn btn-outline-success" title="Manage all roles">
+                                        <i class="bi bi-shield-lock"></i> Roles
                                     </a>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Quick add role">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            @foreach (var role in GetAllRoles(user))
+                                            {
+                                                <li>
+                                                    <form asp-action="QuickAddRole" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="userId" value="@user.Id" />
+                                                        <input type="hidden" name="roleName" value="@role" />
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="bi bi-plus-circle text-success me-1"></i> @role
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
                                     <form asp-action="Delete" asp-route-id="@user.Id" method="post"
                                           style="display:inline;"
-                                          onsubmit="return confirm('Are you sure you want to delete @user.UserName?');">
+                                          onsubmit="return confirm('Delete user @user.UserName?');">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -77,10 +114,19 @@
 
             @if (!Model.Any())
             {
-                <div class="alert alert-info text-center">
+                <div class="alert alert-info text-center m-3">
                     No users found. Click "Create New User" to add one.
                 </div>
             }
         </div>
     </div>
 </div>
+
+@functions {
+    IEnumerable<string> GetAllRoles(JwtAuthApp.Models.User user)
+    {
+        var assignedRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
+        var allRoles = ViewBag.AllRoles as IEnumerable<JwtAuthApp.Models.Role> ?? Enumerable.Empty<JwtAuthApp.Models.Role>();
+        return allRoles.Where(r => !assignedRoleIds.Contains(r.Id)).Select(r => r.Name);
+    }
+}
