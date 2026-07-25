@@ -27,23 +27,36 @@
                     <tr>
                         <th style="width:60px">ID</th>
                         <th>Username</th>
+                        <th>Status</th>
                         <th>Roles</th>
                         <th style="width:160px">Created</th>
-                        <th style="width:220px">Actions</th>
+                        <th style="width:320px">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var user in Model)
                     {
-                        <tr>
+                        <tr class="@(user.IsBlocked ? "table-danger" : "")">
                             <td class="text-muted">@user.Id</td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;font-size:0.8rem;">
+                                    <div class="rounded-circle @(user.IsBlocked ? "bg-danger" : "bg-primary") text-white d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;font-size:0.8rem;">
                                         @user.UserName[0].ToString().ToUpper()
                                     </div>
-                                    <strong>@user.UserName</strong>
+                                    <div>
+                                        <strong class="@(user.IsBlocked ? "text-decoration-line-through text-muted" : "")">@user.UserName</strong>
+                                    </div>
                                 </div>
+                            </td>
+                            <td>
+                                @if (user.IsBlocked)
+                                {
+                                    <span class="badge bg-danger"><i class="bi bi-lock-fill"></i> Blocked</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-unlock"></i> Active</span>
+                                }
                             </td>
                             <td>
                                 @if (user.UserRoles.Any())
@@ -74,9 +87,18 @@
                                     <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-outline-primary" title="Edit username">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a asp-action="ManageRoles" asp-route-id="@user.Id" class="btn btn-outline-success" title="Manage all roles">
-                                        <i class="bi bi-shield-lock"></i> Roles
+                                    <a asp-action="ChangePassword" asp-route-id="@user.Id" class="btn btn-outline-warning" title="Change password">
+                                        <i class="bi bi-key"></i>
                                     </a>
+                                    <a asp-action="ManageRoles" asp-route-id="@user.Id" class="btn btn-outline-success" title="Manage all roles">
+                                        <i class="bi bi-shield-lock"></i>
+                                    </a>
+                                    <form asp-action="ToggleBlock" asp-route-id="@user.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm @(user.IsBlocked ? "btn-outline-success" : "btn-outline-warning")" title="@(user.IsBlocked ? "Unblock" : "Block")">
+                                            <i class="bi @(user.IsBlocked ? "bi-unlock" : "bi-lock")"></i>
+                                        </button>
+                                    </form>
                                     <div class="btn-group btn-group-sm" role="group">
                                         <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Quick add role">
                                             <i class="bi bi-plus"></i>

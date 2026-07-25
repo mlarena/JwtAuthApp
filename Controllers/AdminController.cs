@@ -250,5 +250,59 @@ namespace JwtAuthApp.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        // Смена пароля
+        [HttpGet]
+        public async Task<IActionResult> ChangePassword(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            return View(new ChangePasswordViewModel
+            {
+                UserId = user.Id,
+                UserName = user.UserName
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(int id, ChangePasswordViewModel viewModel)
+        {
+            if (id != viewModel.UserId) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                var user = await _context.Users.FindAsync(id);
+                if (user == null) return NotFound();
+
+                var (hash, salt) = _authService.HashPassword(viewModel.NewPassword);
+                user.PasswordHash = hash;
+                user.Salt = salt;
+
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Password for \"{user.UserName}\" changed successfully!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(viewModel);
+        }
+
+        // Блокировка / разблокировка
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleBlock(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            user.IsBlocked = !user.IsBlocked;
+            await _context.SaveChangesAsync();
+
+            var status = user.IsBlocked ? "blocked" : "unblocked";
+            TempData["Success"] = $"User \"{user.UserName}\" has been {status}!";
+
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

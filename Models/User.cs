@@ -34,6 +34,9 @@ namespace JwtAuthApp.Models
         [Column("CreatedAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        [Column("IsBlocked")]
+        public bool IsBlocked { get; set; } = false;
+
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 
     }

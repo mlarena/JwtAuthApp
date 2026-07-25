@@ -44,6 +44,12 @@ namespace JwtAuthApp.Controllers
                 return View(model);
             }
 
+            if (user.IsBlocked)
+            {
+                ModelState.AddModelError("", "This account has been blocked. Contact an administrator.");
+                return View(model);
+            }
+
             var token = _authService.GenerateJwtToken(user);
             HttpContext.Session.SetString("JWToken", token);
             
