@@ -210,9 +210,16 @@ using (var scope = app.Services.CreateScope())
 
         AddAccess("Secure", "Защищённая", "Защищённая страница", false, new[] { "User", "Admin" });
         AddAccess("Test", "Тест", "Тестовая страница", false, new[] { "User", "Admin" });
-        AddAccess("MonitoringPost", "Мониторинг", "Посты мониторинга (CRUD)", false, new[] { "User", "Admin" });
+        AddAccess("MonitoringPost", "Посты мониторинга", "Посты мониторинга (CRUD)", false, new[] { "User", "Admin" });
         AddAccess("Sensor", "Датчики", "Датчики (CRUD)", false, new[] { "User", "Admin" });
-        AddAccess("DataIWS", "Данные IWS", "Данные IWS (CRUD)", false, new[] { "User", "Admin" });
+        AddAccess("SensorType", "Типы датчиков", "Справочник типов датчиков", false, new[] { "User", "Admin" });
+        AddAccess("DOVData", "Данные DOV", "Данные видимости (DOV)", false, new[] { "User", "Admin" });
+        AddAccess("DSPDData", "Данные DSPD", "Данные состояния дороги (DSPD)", false, new[] { "User", "Admin" });
+        AddAccess("DustData", "Данные пыли", "Данные пыли (PM10/PM2.5/PM1)", false, new[] { "User", "Admin" });
+        AddAccess("IWSData", "Метеоданные IWS", "Метеоданные (IWS)", false, new[] { "User", "Admin" });
+        AddAccess("MUEKSData", "Данные MUEKS", "Данные питания/системы (MUEKS)", false, new[] { "User", "Admin" });
+        AddAccess("PollingSession", "Сессии опроса", "Сессии опроса датчиков", false, new[] { "User", "Admin" });
+        AddAccess("SensorResults", "Результаты опроса", "Результаты опроса датчиков", false, new[] { "User", "Admin" });
         AddAccess("Admin", "Пользователи", "Управление пользователями", true, null);
         AddAccess("Role", "Роли", "Управление ролями", true, null);
         AddAccess("Access", "Управление доступом", "Правила доступа к контроллерам", true, null);

@@ -40,6 +40,7 @@
             </ul>
         </nav>
 
+        <!-- OVERLAY для мобильных -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <!-- MAIN CONTENT -->
@@ -48,6 +49,71 @@
                 @RenderBody()
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var sidebar = document.getElementById('sidebar');
+                var toggle = document.getElementById('sidebarToggle');
+                var overlay = document.getElementById('sidebarOverlay');
+                var themeToggle = document.getElementById('themeToggle');
+                var html = document.documentElement;
+
+                // Восстановление темы
+                var savedTheme = localStorage.getItem('theme') || 'light';
+                applyTheme(savedTheme);
+
+                // Sidebar toggle
+                if (toggle && sidebar) {
+                    toggle.addEventListener('click', function () {
+                        if (window.innerWidth <= 768) {
+                            sidebar.classList.toggle('show');
+                        } else {
+                            sidebar.classList.toggle('collapsed');
+                            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                        }
+                    });
+                }
+
+                // Overlay — закрытие sidebar на мобильных
+                if (overlay && sidebar) {
+                    overlay.addEventListener('click', function () {
+                        sidebar.classList.remove('show');
+                    });
+                }
+
+                // Восстановление состояния sidebar
+                if (sidebar && localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 768) {
+                    sidebar.classList.add('collapsed');
+                }
+
+                // Theme toggle
+                if (themeToggle) {
+                    themeToggle.addEventListener('click', function () {
+                        var current = html.getAttribute('data-theme');
+                        applyTheme(current === 'dark' ? 'light' : 'dark');
+                    });
+                }
+
+                function applyTheme(theme) {
+                    html.setAttribute('data-theme', theme);
+                    localStorage.setItem('theme', theme);
+                    if (themeToggle) {
+                        var icon = themeToggle.querySelector('i');
+                        if (icon) {
+                            icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+                        }
+                    }
+                }
+
+                // Подсветка активного пункта меню
+                document.querySelectorAll('.sidebar-link').forEach(function (link) {
+                    var href = link.getAttribute('href');
+                    if (href && window.location.pathname.toLowerCase().startsWith(href.toLowerCase())) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        </script>
     }
     else
     {
@@ -59,64 +125,6 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        // Sidebar toggle
-        const sidebar = document.getElementById('sidebar');
-        const toggle = document.getElementById('sidebarToggle');
-        const overlay = document.getElementById('sidebarOverlay');
-
-        if (toggle) {
-            toggle.addEventListener('click', () => {
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.toggle('show');
-                } else {
-                    sidebar.classList.toggle('collapsed');
-                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-                }
-            });
-        }
-
-        if (overlay) {
-            overlay.addEventListener('click', () => {
-                sidebar.classList.remove('show');
-            });
-        }
-
-        // Restore sidebar state
-        if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 768) {
-            sidebar.classList.add('collapsed');
-        }
-
-        // Theme toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const html = document.documentElement;
-
-        function setTheme(theme) {
-            html.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            const icon = themeToggle.querySelector('i');
-            icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
-        }
-
-        // Restore theme
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        setTheme(savedTheme);
-
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => {
-                const current = html.getAttribute('data-theme');
-                setTheme(current === 'dark' ? 'light' : 'dark');
-            });
-        }
-
-        // Active sidebar link
-        document.querySelectorAll('.sidebar-link').forEach(link => {
-            const href = link.getAttribute('href');
-            if (href && window.location.pathname.toLowerCase().startsWith(href.toLowerCase())) {
-                link.classList.add('active');
-            }
-        });
-    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

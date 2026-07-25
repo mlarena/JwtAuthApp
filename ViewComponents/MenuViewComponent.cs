@@ -9,6 +9,53 @@ namespace JwtAuthApp.ViewComponents
     {
         private readonly ApplicationDbContext _context;
 
+        private static readonly HashSet<string> HiddenControllers = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Auth", "Home"
+        };
+
+        private static readonly Dictionary<string, string> DisplayNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Secure"] = "Защищённая",
+            ["Test"] = "Тест",
+            ["MonitoringPost"] = "Посты мониторинга",
+            ["Sensor"] = "Датчики",
+            ["SensorType"] = "Типы датчиков",
+            ["DOVData"] = "Данные DOV",
+            ["DSPDData"] = "Данные DSPD",
+            ["DustData"] = "Данные пыли",
+            ["IWSData"] = "Метеоданные IWS",
+            ["MUEKSData"] = "Данные MUEKS",
+            ["PollingSession"] = "Сессии опроса",
+            ["SensorResults"] = "Результаты опроса",
+            ["Admin"] = "Пользователи",
+            ["Role"] = "Роли",
+            ["Access"] = "Управление доступом",
+            ["Audit"] = "Журнал аудита",
+        };
+
+        private static readonly Dictionary<string, string> Icons = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Secure"] = "bi-lock",
+            ["Test"] = "bi-bug",
+            ["MonitoringPost"] = "bi-geo-alt",
+            ["Sensor"] = "bi-cpu",
+            ["SensorType"] = "bi-tags",
+            ["DOVData"] = "bi-eye",
+            ["DSPDData"] = "bi-road",
+            ["DustData"] = "bi-cloud-haze",
+            ["IWSData"] = "bi-cloud-sun",
+            ["MUEKSData"] = "bi-battery-charging",
+            ["PollingSession"] = "bi-arrow-clockwise",
+            ["SensorResults"] = "bi-clipboard-check",
+            ["Admin"] = "bi-people",
+            ["Role"] = "bi-shield-lock",
+            ["Access"] = "bi-key",
+            ["Audit"] = "bi-journal-text",
+        };
+
+        private static readonly string[] AdminControllers = { "Admin", "Role", "Access", "Audit" };
+
         public MenuViewComponent(ApplicationDbContext context)
         {
             _context = context;
@@ -36,51 +83,46 @@ namespace JwtAuthApp.ViewComponents
             // Главная — всегда
             items.Add(new MenuItemViewModel { Controller = "Home", Action = "Index", Text = "Главная", Icon = "bi-house" });
 
-            // Защищённая
-            var secure = allAccess.FirstOrDefault(c => c.ControllerName == "Secure");
-            if (secure != null && CanAccess(secure, userRoles))
-                items.Add(new MenuItemViewModel { Controller = "Secure", Action = "Index", Text = "Защищённая", Icon = "bi-lock" });
+            // Обычные пункты меню (не Admin-раздел)
+            foreach (var access in allAccess)
+            {
+                if (HiddenControllers.Contains(access.ControllerName))
+                    continue;
+                if (AdminControllers.Contains(access.ControllerName))
+                    continue;
 
-            // Тест
-            var test = allAccess.FirstOrDefault(c => c.ControllerName == "Test");
-            if (test != null && CanAccess(test, userRoles))
-                items.Add(new MenuItemViewModel { Controller = "Test", Action = "Index", Text = "Тест", Icon = "bi-bug" });
+                if (!CanAccess(access, userRoles))
+                    continue;
 
-            // Посты мониторинга
-            var monitoring = allAccess.FirstOrDefault(c => c.ControllerName == "MonitoringPost");
-            if (monitoring != null && CanAccess(monitoring, userRoles))
-                items.Add(new MenuItemViewModel { Controller = "MonitoringPost", Action = "Index", Text = "Мониторинг", Icon = "bi-geo-alt" });
+                items.Add(new MenuItemViewModel
+                {
+                    Controller = access.ControllerName,
+                    Action = "Index",
+                    Text = DisplayNames.TryGetValue(access.ControllerName, out var name) ? name : access.DisplayName,
+                    Icon = Icons.TryGetValue(access.ControllerName, out var icon) ? icon : "bi-folder"
+                });
+            }
 
-            // Датчики
-            var sensor = allAccess.FirstOrDefault(c => c.ControllerName == "Sensor");
-            if (sensor != null && CanAccess(sensor, userRoles))
-                items.Add(new MenuItemViewModel { Controller = "Sensor", Action = "Index", Text = "Датчики", Icon = "bi-cpu" });
-
-            // Данные IWS
-            var dataIws = allAccess.FirstOrDefault(c => c.ControllerName == "DataIWS");
-            if (dataIws != null && CanAccess(dataIws, userRoles))
-                items.Add(new MenuItemViewModel { Controller = "DataIWS", Action = "Index", Text = "Данные IWS", Icon = "bi-database" });
-
-            // Администрирование
+            // Администрирование — раскрывающийся раздел
             if (userRoles.Contains("Admin"))
             {
                 var adminItems = new List<MenuItemViewModel>();
+                foreach (var access in allAccess)
+                {
+                    if (!AdminControllers.Contains(access.ControllerName))
+                        continue;
 
-                var adminAccess = allAccess.FirstOrDefault(c => c.ControllerName == "Admin");
-                if (adminAccess != null)
-                    adminItems.Add(new MenuItemViewModel { Controller = "Admin", Action = "Index", Text = "Пользователи", Icon = "bi-people" });
+                    if (!CanAccess(access, userRoles))
+                        continue;
 
-                var roleAccess = allAccess.FirstOrDefault(c => c.ControllerName == "Role");
-                if (roleAccess != null)
-                    adminItems.Add(new MenuItemViewModel { Controller = "Role", Action = "Index", Text = "Роли", Icon = "bi-shield-lock" });
-
-                var accessAccess = allAccess.FirstOrDefault(c => c.ControllerName == "Access");
-                if (accessAccess != null)
-                    adminItems.Add(new MenuItemViewModel { Controller = "Access", Action = "Index", Text = "Управление доступом", Icon = "bi-key" });
-
-                var auditAccess = allAccess.FirstOrDefault(c => c.ControllerName == "Audit");
-                if (auditAccess != null)
-                    adminItems.Add(new MenuItemViewModel { Controller = "Audit", Action = "Index", Text = "Журнал аудита", Icon = "bi-journal-text" });
+                    adminItems.Add(new MenuItemViewModel
+                    {
+                        Controller = access.ControllerName,
+                        Action = "Index",
+                        Text = DisplayNames.TryGetValue(access.ControllerName, out var name) ? name : access.DisplayName,
+                        Icon = Icons.TryGetValue(access.ControllerName, out var icon) ? icon : "bi-gear"
+                    });
+                }
 
                 if (adminItems.Any())
                 {
