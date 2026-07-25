@@ -1,10 +1,10 @@
 @model JwtAuthApp.Models.Role
 
 @{
-    ViewData["Title"] = "Edit Role";
+    ViewData["Title"] = "Редактирование роли";
 }
 
-<h2>Edit Role</h2>
+<h2>Редактирование роли</h2>
 
 <div class="row">
     <div class="col-md-6">
@@ -13,20 +13,20 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group mb-3">
-                <label asp-for="Name" class="control-label"></label>
+                <label asp-for="Name" class="control-label">Название</label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
-                <label asp-for="Description" class="control-label"></label>
+                <label asp-for="Description" class="control-label">Описание</label>
                 <input asp-for="Description" class="form-control" />
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn btn-primary">Save</button>
-                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
             </div>
         </form>
     </div>

@@ -1,41 +1,41 @@
 @model JwtAuthApp.ViewModels.CreateUserViewModel
 
 @{
-    ViewData["Title"] = "Create User";
+    ViewData["Title"] = "Создание пользователя";
 }
 
-<h2>Create New User</h2>
+<h2>Создание нового пользователя</h2>
 
 <div class="row">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">New User</h4>
+                <h4 class="mb-0">Новый пользователь</h4>
             </div>
             <div class="card-body">
                 <form asp-action="Create" method="post">
                     <div asp-validation-summary="All" class="text-danger"></div>
 
                     <div class="form-group mb-3">
-                        <label asp-for="UserName" class="control-label fw-bold"></label>
-                        <input asp-for="UserName" class="form-control" placeholder="Enter username" />
+                        <label asp-for="UserName" class="control-label fw-bold">Имя пользователя</label>
+                        <input asp-for="UserName" class="form-control" placeholder="Введите имя пользователя" />
                         <span asp-validation-for="UserName" class="text-danger"></span>
                     </div>
 
                     <div class="form-group mb-3">
-                        <label asp-for="Password" class="control-label fw-bold"></label>
-                        <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" />
+                        <label asp-for="Password" class="control-label fw-bold">Пароль</label>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="Введите пароль" />
                         <span asp-validation-for="Password" class="text-danger"></span>
-                        <small class="form-text text-muted">Password must be at least 6 characters long.</small>
+                        <small class="form-text text-muted">Минимум 6 символов.</small>
                     </div>
 
-                    <p class="text-muted">User will be assigned the "User" role by default. You can change roles after creation.</p>
+                    <p class="text-muted">Пользователю будет назначена роль «User» по умолчанию. Роли можно изменить после создания.</p>
 
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-person-plus"></i> Create User
+                            <i class="bi bi-person-plus"></i> Создать
                         </button>
-                        <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Назад к списку</a>
                     </div>
                 </form>
             </div>

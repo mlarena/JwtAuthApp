@@ -90,7 +90,7 @@ namespace JwtAuthApp.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"Access rules for \"{access.DisplayName}\" updated!";
+                TempData["Success"] = $"Правила доступа для \"{access.DisplayName}\" обновлены!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -132,7 +132,7 @@ namespace JwtAuthApp.Controllers
             }
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = $"Access for \"{access.DisplayName}\" updated!";
+            TempData["Success"] = $"Доступ для \"{access.DisplayName}\" обновлён!";
             return RedirectToAction(nameof(Index));
         }
 
@@ -145,7 +145,7 @@ namespace JwtAuthApp.Controllers
 
             access.AllowAllAuthenticated = !access.AllowAllAuthenticated;
             await _context.SaveChangesAsync();
-            TempData["Success"] = $"\"{access.DisplayName}\" — AllowAll set to {access.AllowAllAuthenticated}";
+            TempData["Success"] = $"\"{access.DisplayName}\" — Разрешить всем установлено: {access.AllowAllAuthenticated}";
             return RedirectToAction(nameof(Index));
         }
     }

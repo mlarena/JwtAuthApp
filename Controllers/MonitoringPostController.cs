@@ -56,7 +56,7 @@ namespace JwtAuthApp.Controllers
             if ((post.Longitude == null && post.Latitude != null) || 
                 (post.Longitude != null && post.Latitude == null))
             {
-                ModelState.AddModelError("", "Both coordinates must be either provided or both empty.");
+                ModelState.AddModelError("", "Обе координаты должны быть либо указаны, либо пусты.");
             }
 
             if (ModelState.IsValid)
@@ -69,13 +69,13 @@ namespace JwtAuthApp.Controllers
                     _context.MonitoringPosts.Add(post);
                     await _context.SaveChangesAsync();
 
-                    TempData["Success"] = "Monitoring post created successfully!";
+                    TempData["Success"] = "Пост мониторинга успешно создан!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error creating monitoring post");
-                    ModelState.AddModelError("", "An error occurred while saving the post.");
+                    ModelState.AddModelError("", "Произошла ошибка при сохранении поста.");
                 }
             }
 
@@ -107,7 +107,7 @@ namespace JwtAuthApp.Controllers
             if ((post.Longitude == null && post.Latitude != null) || 
                 (post.Longitude != null && post.Latitude == null))
             {
-                ModelState.AddModelError("", "Both coordinates must be either provided or both empty.");
+                ModelState.AddModelError("", "Обе координаты должны быть либо указаны, либо пусты.");
             }
 
             if (ModelState.IsValid)
@@ -132,7 +132,7 @@ namespace JwtAuthApp.Controllers
                     _context.Update(existingPost);
                     await _context.SaveChangesAsync();
 
-                    TempData["Success"] = "Monitoring post updated successfully!";
+                    TempData["Success"] = "Пост мониторинга успешно обновлён!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
@@ -146,7 +146,7 @@ namespace JwtAuthApp.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error updating monitoring post");
-                    ModelState.AddModelError("", "An error occurred while updating the post.");
+                    ModelState.AddModelError("", "Произошла ошибка при обновлении поста.");
                 }
             }
 
@@ -174,7 +174,7 @@ namespace JwtAuthApp.Controllers
             {
                 _context.MonitoringPosts.Remove(post);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Monitoring post deleted successfully!";
+                TempData["Success"] = "Пост мониторинга успешно удалён!";
             }
             return RedirectToAction(nameof(Index));
         }
@@ -191,7 +191,7 @@ namespace JwtAuthApp.Controllers
                 post.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
                 
-                TempData["Success"] = $"Post {(post.IsActive ? "activated" : "deactivated")} successfully!";
+                TempData["Success"] = $"Пост успешно {(post.IsActive ? "активирован" : "деактивирован")}!";
             }
             return RedirectToAction(nameof(Index));
         }

@@ -40,13 +40,13 @@ namespace JwtAuthApp.Controllers
 
             if (user == null || !_authService.VerifyPassword(model.Password, user.PasswordHash, user.Salt))
             {
-                ModelState.AddModelError("", "Invalid credentials");
+                ModelState.AddModelError("", "Неверные учётные данные");
                 return View(model);
             }
 
             if (user.IsBlocked)
             {
-                ModelState.AddModelError("", "This account has been blocked. Contact an administrator.");
+                ModelState.AddModelError("", "Эта учётная запись заблокирована. Обратитесь к администратору.");
                 return View(model);
             }
 
@@ -67,7 +67,7 @@ namespace JwtAuthApp.Controllers
 
             if (_context.Users.Any(u => u.UserName == model.UserName))
             {
-                ModelState.AddModelError("", "Username already exists");
+                ModelState.AddModelError("", "Пользователь с таким именем уже существует");
                 return View(model);
             }
 

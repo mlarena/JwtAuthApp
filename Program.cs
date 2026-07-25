@@ -125,8 +125,8 @@ using (var scope = app.Services.CreateScope())
     if (!dbContext.Roles.Any())
     {
         dbContext.Roles.AddRange(
-            new JwtAuthApp.Models.Role { Name = "Admin", Description = "System administrator" },
-            new JwtAuthApp.Models.Role { Name = "User", Description = "Regular user" }
+            new JwtAuthApp.Models.Role { Name = "Admin", Description = "Системный администратор" },
+            new JwtAuthApp.Models.Role { Name = "User", Description = "Обычный пользователь" }
         );
         dbContext.SaveChanges();
     }
@@ -207,15 +207,15 @@ using (var scope = app.Services.CreateScope())
             accessEntries.Add(entry);
         }
 
-        AddAccess("Secure", "Secure", "Protected page", false, new[] { "User", "Admin" });
-        AddAccess("Test", "Test", "Test page", false, new[] { "User", "Admin" });
-        AddAccess("MonitoringPost", "MonitoringPost", "Monitoring posts CRUD", false, new[] { "User", "Admin" });
-        AddAccess("Sensor", "Sensors", "Sensors CRUD", false, new[] { "User", "Admin" });
-        AddAccess("DataIWS", "DataIWS", "Data IWS CRUD", false, new[] { "User", "Admin" });
-        AddAccess("Admin", "Users", "User management", true, null);
-        AddAccess("Role", "Roles", "Role management", true, null);
-        AddAccess("Access", "Access Control", "Controller access rules", true, null);
-        AddAccess("Audit", "Audit Log", "System audit log", true, null);
+        AddAccess("Secure", "Защищённая", "Защищённая страница", false, new[] { "User", "Admin" });
+        AddAccess("Test", "Тест", "Тестовая страница", false, new[] { "User", "Admin" });
+        AddAccess("MonitoringPost", "Мониторинг", "Посты мониторинга (CRUD)", false, new[] { "User", "Admin" });
+        AddAccess("Sensor", "Датчики", "Датчики (CRUD)", false, new[] { "User", "Admin" });
+        AddAccess("DataIWS", "Данные IWS", "Данные IWS (CRUD)", false, new[] { "User", "Admin" });
+        AddAccess("Admin", "Пользователи", "Управление пользователями", true, null);
+        AddAccess("Role", "Роли", "Управление ролями", true, null);
+        AddAccess("Access", "Управление доступом", "Правила доступа к контроллерам", true, null);
+        AddAccess("Audit", "Журнал аудита", "Журнал действий системы", true, null);
 
         dbContext.ControllerAccesses.AddRange(accessEntries);
         dbContext.SaveChanges();

@@ -1,68 +1,68 @@
 @model JwtAuthApp.Models.MonitoringPost
 
 @{
-    ViewData["Title"] = "Post Details";
+    ViewData["Title"] = "Детали поста";
 }
 
-<h2>Post Details</h2>
+<h2>Детали поста мониторинга</h2>
 
 <div class="card">
     <div class="card-body">
         <dl class="row">
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Id)</dt>
-            <dd class="col-sm-9">@Html.DisplayFor(model => model.Id)</dd>
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
 
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Name)</dt>
-            <dd class="col-sm-9">@Html.DisplayFor(model => model.Name)</dd>
+            <dt class="col-sm-3">Название</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
 
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Description)</dt>
-            <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Description) ? "No description" : Model.Description)</dd>
+            <dt class="col-sm-3">Описание</dt>
+            <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Description) ? "Нет описания" : Model.Description)</dd>
 
-            <dt class="col-sm-3">Coordinates</dt>
+            <dt class="col-sm-3">Координаты</dt>
             <dd class="col-sm-9">
                 @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
                 {
-                    <span>Latitude: @Model.Latitude°, Longitude: @Model.Longitude°</span>
+                    <span>Широта: @Model.Latitude°, Долгота: @Model.Longitude°</span>
                 }
                 else
                 {
-                    <span class="text-muted">No coordinates set</span>
+                    <span class="text-muted">Не заданы</span>
                 }
             </dd>
 
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.IsMobile)</dt>
+            <dt class="col-sm-3">Мобильный</dt>
             <dd class="col-sm-9">
                 @if (Model.IsMobile)
                 {
-                    <span class="badge bg-info">Mobile post</span>
+                    <span class="badge bg-info">Мобильный пост</span>
                 }
                 else
                 {
-                    <span class="badge bg-secondary">Fixed post</span>
+                    <span class="badge bg-secondary">Стационарный пост</span>
                 }
             </dd>
 
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.IsActive)</dt>
+            <dt class="col-sm-3">Статус</dt>
             <dd class="col-sm-9">
                 @if (Model.IsActive)
                 {
-                    <span class="badge bg-success">Active</span>
+                    <span class="badge bg-success">Активен</span>
                 }
                 else
                 {
-                    <span class="badge bg-danger">Inactive</span>
+                    <span class="badge bg-danger">Неактивен</span>
                 }
             </dd>
 
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
-            <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+            <dt class="col-sm-3">Создан</dt>
+            <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
 
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.UpdatedAt)</dt>
-            <dd class="col-sm-9">@Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+            <dt class="col-sm-3">Обновлён</dt>
+            <dd class="col-sm-9">@Model.UpdatedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
         </dl>
     </div>
     <div class="card-footer">
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
-        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Редактировать</a>
+        <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
     </div>
 </div>

@@ -1,36 +1,36 @@
 @model JwtAuthApp.Models.DataIWS
 
 @{
-    ViewData["Title"] = "Delete Data Entry";
+    ViewData["Title"] = "Удалить запись";
 }
 
-<h2>Delete Data Entry</h2>
+<h2>Удалить запись</h2>
 
 <div class="alert alert-danger">
-    <h4>Are you sure you want to delete this data entry?</h4>
+    <h4>Вы уверены, что хотите удалить эту запись?</h4>
 </div>
 
 <div class="card">
     <div class="card-body">
         <dl class="row">
-            <dt class="col-sm-3">Sensor</dt>
-            <dd class="col-sm-9">@(Model.Sensor?.Name ?? $"Sensor #{Model.SensorId}")</dd>
+            <dt class="col-sm-3">Датчик</dt>
+            <dd class="col-sm-9">@(Model.Sensor?.Name ?? $"Датчик #{Model.SensorId}")</dd>
 
-            <dt class="col-sm-3">Value</dt>
+            <dt class="col-sm-3">Значение</dt>
             <dd class="col-sm-9">@Model.Value</dd>
 
-            <dt class="col-sm-3">Recorded At</dt>
+            <dt class="col-sm-3">Дата записи</dt>
             <dd class="col-sm-9">@Model.RecordedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
 
-            <dt class="col-sm-3">Created</dt>
+            <dt class="col-sm-3">Создан</dt>
             <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
         </dl>
     </div>
     <div class="card-footer">
         <form asp-action="Delete" method="post">
             <input type="hidden" asp-for="Id" />
-            <button type="submit" class="btn btn-danger">Delete</button>
-            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-danger">Удалить</button>
+            <a asp-action="Index" class="btn btn-secondary">Отмена</a>
         </form>
     </div>
 </div>

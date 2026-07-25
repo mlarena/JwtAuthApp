@@ -66,7 +66,7 @@ namespace JwtAuthApp.Controllers
         {
             if (entry.SensorId <= 0)
             {
-                ModelState.AddModelError("SensorId", "Please select a sensor.");
+                ModelState.AddModelError("SensorId", "Пожалуйста, выберите датчик.");
             }
 
             if (ModelState.IsValid)
@@ -76,13 +76,13 @@ namespace JwtAuthApp.Controllers
                     entry.CreatedAt = DateTime.UtcNow;
                     _context.DataIWS.Add(entry);
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Data entry created successfully!";
+                    TempData["Success"] = "Запись данных успешно создана!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error creating data entry");
-                    ModelState.AddModelError("", "An error occurred while saving the data.");
+                    ModelState.AddModelError("", "Произошла ошибка при сохранении данных.");
                 }
             }
 
@@ -113,7 +113,7 @@ namespace JwtAuthApp.Controllers
 
             if (entry.SensorId <= 0)
             {
-                ModelState.AddModelError("SensorId", "Please select a sensor.");
+                ModelState.AddModelError("SensorId", "Пожалуйста, выберите датчик.");
             }
 
             if (ModelState.IsValid)
@@ -129,7 +129,7 @@ namespace JwtAuthApp.Controllers
 
                     _context.Update(existing);
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Data entry updated successfully!";
+                    TempData["Success"] = "Запись данных успешно обновлена!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
@@ -141,7 +141,7 @@ namespace JwtAuthApp.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error updating data entry");
-                    ModelState.AddModelError("", "An error occurred while updating the data.");
+                    ModelState.AddModelError("", "Произошла ошибка при обновлении данных.");
                 }
             }
 
@@ -170,7 +170,7 @@ namespace JwtAuthApp.Controllers
             {
                 _context.DataIWS.Remove(entry);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Data entry deleted successfully!";
+                TempData["Success"] = "Запись данных успешно удалена!";
             }
             return RedirectToAction(nameof(Index));
         }

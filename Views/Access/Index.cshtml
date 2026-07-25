@@ -1,13 +1,13 @@
 @model IEnumerable<JwtAuthApp.Models.ControllerAccess>
 
 @{
-    ViewData["Title"] = "Access Control";
+    ViewData["Title"] = "Управление доступом";
     var allRoles = ViewBag.AllRoles as IEnumerable<JwtAuthApp.Models.Role> ?? Enumerable.Empty<JwtAuthApp.Models.Role>();
 }
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2><i class="bi bi-key"></i> Access Control</h2>
+        <h2><i class="bi bi-key"></i> Управление доступом</h2>
     </div>
 
     @if (TempData["Success"] != null)
@@ -20,8 +20,8 @@
 
     <div class="alert alert-info">
         <i class="bi bi-info-circle"></i>
-        Configure which roles can access each controller. <strong>AllowAll</strong> means any logged-in user can access.
-        If specific roles are selected, only users with those roles can access.
+        Настройте, какие роли могут обращаться к каждому контроллеру. <strong>Все авторизованные</strong> — доступно всем вошедшим в систему.
+        Если выбраны конкретные роли — доступ будут иметь только пользователи с этими ролями.
     </div>
 
     <div class="card">
@@ -29,11 +29,11 @@
             <table class="table table-hover mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th>Controller</th>
-                        <th>Display Name</th>
-                        <th>Access Mode</th>
-                        <th>Allowed Roles</th>
-                        <th style="width:180px">Actions</th>
+                        <th>Контроллер</th>
+                        <th>Отображаемое имя</th>
+                        <th>Режим доступа</th>
+                        <th>Разрешённые роли</th>
+                        <th style="width:180px">Действия</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -45,21 +45,21 @@
                             <td>
                                 @if (item.AllowAllAuthenticated)
                                 {
-                                    <span class="badge bg-success">All Authenticated</span>
+                                    <span class="badge bg-success">Все авторизованные</span>
                                 }
                                 else if (item.ControllerAccessRoles.Any())
                                 {
-                                    <span class="badge bg-warning text-dark">Role Restricted</span>
+                                    <span class="badge bg-warning text-dark">Ограничено ролями</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">No Rules</span>
+                                    <span class="badge bg-secondary">Без правил</span>
                                 }
                             </td>
                             <td>
                                 @if (item.AllowAllAuthenticated)
                                 {
-                                    <span class="text-muted">All users</span>
+                                    <span class="text-muted">Все пользователи</span>
                                 }
                                 else if (item.ControllerAccessRoles.Any())
                                 {
@@ -72,7 +72,7 @@
                                                 <input type="hidden" name="id" value="@item.Id" />
                                                 <input type="hidden" name="roleName" value="@cr.Role.Name" />
                                                 <input type="hidden" name="addRole" value="false" />
-                                                <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent text-white" title="Remove" style="line-height:1;font-size:0.7rem;">
+                                                <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent text-white" title="Удалить" style="line-height:1;font-size:0.7rem;">
                                                     <i class="bi bi-x"></i>
                                                 </button>
                                             </form>
@@ -86,11 +86,11 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary" title="Edit">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary" title="Редактировать">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" title="Add role">
+                                        <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" title="Добавить роль">
                                             <i class="bi bi-plus"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
@@ -113,7 +113,7 @@
                                     <form asp-action="ToggleAllowAll" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.Id" />
-                                        <button type="submit" class="btn btn-sm @(item.AllowAllAuthenticated ? "btn-success" : "btn-outline-secondary")" title="Toggle AllowAll">
+                                        <button type="submit" class="btn btn-sm @(item.AllowAllAuthenticated ? "btn-success" : "btn-outline-secondary")" title="Переключить доступ для всех">
                                             <i class="bi bi-globe"></i>
                                         </button>
                                     </form>

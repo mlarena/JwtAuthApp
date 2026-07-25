@@ -2,13 +2,13 @@
 @using JwtAuthApp.ViewModels
 
 @{
-    ViewData["Title"] = "Аудит (действия + изменения)";
+    ViewData["Title"] = "Журнал аудита";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h2 class="mb-0">Аудит</h2>
-        <div class="text-muted">Единый журнал действий пользователей и изменений данных</div>
+        <h2 class="mb-0">Журнал аудита</h2>
+        <div class="text-muted">Лог действий и изменений</div>
     </div>
     <div class="d-flex gap-2">
         <button type="button" class="btn btn-outline-secondary" id="toggleColumnsBtn">
@@ -95,7 +95,7 @@
 <!-- Paging header -->
 <div class="d-flex justify-content-between align-items-center mb-2">
     <div>
-        <strong>Страница @Model.Page из @Model.TotalPages</strong>
+        <strong>Стр. @Model.Page из @Model.TotalPages</strong>
         <span class="text-muted">(всего: @Model.TotalItems)</span>
     </div>
     <div class="d-flex gap-2">
@@ -133,19 +133,19 @@
     <table class="table table-striped table-hover align-middle">
         <thead class="table-dark">
             <tr>
-                <th>Время</th>
+                <th>Дата</th>
                 <th>Тип</th>
                 <th>Пользователь</th>
                 <th>Сводка</th>
                 <th class="col-extra d-none">Метод</th>
                 <th class="col-extra d-none">URL</th>
-                <th class="col-extra d-none">IP</th>
-                <th class="col-extra d-none">Статус</th>
-                <th class="col-extra d-none">Время (мс)</th>
+                <th class="col-extra d-none">IP адрес</th>
+                <th class="col-extra d-none">Успех</th>
+                <th class="col-extra d-none">Время выполнения</th>
                 <th class="col-extra d-none">Сущность</th>
-                <th class="col-extra d-none">EntityId</th>
-                <th class="col-extra d-none">ChangeType</th>
-                <th>Действия</th>
+                <th class="col-extra d-none">ID сущности</th>
+                <th class="col-extra d-none">Тип изменения</th>
+                <th>Действие</th>
             </tr>
         </thead>
         <tbody>
@@ -256,7 +256,7 @@
                        asp-action="Details"
                        asp-route-type="@row.Type"
                        asp-route-id="@row.Id">
-                        Детали
+                        Подробнее
                     </a>
                 </td>
             </tr>
@@ -267,7 +267,7 @@
 
 @if (!Model.Items.Any())
 {
-    <div class="alert alert-info">Записи не найдены</div>
+    <div class="alert alert-info">Нет данных</div>
 }
 
 @section Scripts {

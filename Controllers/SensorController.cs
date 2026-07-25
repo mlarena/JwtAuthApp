@@ -44,7 +44,7 @@ namespace JwtAuthApp.Controllers
         {
             if (sensor.MinValue.HasValue && sensor.MaxValue.HasValue && sensor.MinValue > sensor.MaxValue)
             {
-                ModelState.AddModelError("", "Min value cannot be greater than Max value.");
+                ModelState.AddModelError("", "Минимальное значение не может быть больше максимального.");
             }
 
             if (ModelState.IsValid)
@@ -55,13 +55,13 @@ namespace JwtAuthApp.Controllers
                     sensor.UpdatedAt = DateTime.UtcNow;
                     _context.Sensors.Add(sensor);
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Sensor created successfully!";
+                    TempData["Success"] = "Датчик успешно создан!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error creating sensor");
-                    ModelState.AddModelError("", "An error occurred while saving the sensor.");
+                    ModelState.AddModelError("", "Произошла ошибка при сохранении датчика.");
                 }
             }
             return View(sensor);
@@ -82,7 +82,7 @@ namespace JwtAuthApp.Controllers
 
             if (sensor.MinValue.HasValue && sensor.MaxValue.HasValue && sensor.MinValue > sensor.MaxValue)
             {
-                ModelState.AddModelError("", "Min value cannot be greater than Max value.");
+                ModelState.AddModelError("", "Минимальное значение не может быть больше максимального.");
             }
 
             if (ModelState.IsValid)
@@ -102,7 +102,7 @@ namespace JwtAuthApp.Controllers
 
                     _context.Update(existing);
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Sensor updated successfully!";
+                    TempData["Success"] = "Датчик успешно обновлён!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
@@ -114,7 +114,7 @@ namespace JwtAuthApp.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error updating sensor");
-                    ModelState.AddModelError("", "An error occurred while updating the sensor.");
+                    ModelState.AddModelError("", "Произошла ошибка при обновлении датчика.");
                 }
             }
             return View(sensor);
@@ -136,7 +136,7 @@ namespace JwtAuthApp.Controllers
             {
                 _context.Sensors.Remove(sensor);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Sensor deleted successfully!";
+                TempData["Success"] = "Датчик успешно удалён!";
             }
             return RedirectToAction(nameof(Index));
         }
@@ -151,7 +151,7 @@ namespace JwtAuthApp.Controllers
                 sensor.IsActive = !sensor.IsActive;
                 sensor.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"Sensor {(sensor.IsActive ? "activated" : "deactivated")} successfully!";
+                TempData["Success"] = $"Датчик успешно {(sensor.IsActive ? "активирован" : "деактивирован")}!";
             }
             return RedirectToAction(nameof(Index));
         }

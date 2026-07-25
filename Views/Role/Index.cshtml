@@ -1,10 +1,10 @@
 @model IEnumerable<JwtAuthApp.Models.Role>
 
 @{
-    ViewData["Title"] = "Roles";
+    ViewData["Title"] = "Роли";
 }
 
-<h2>Roles</h2>
+<h2>Управление ролями</h2>
 
 @if (TempData["Success"] != null)
 {
@@ -15,16 +15,16 @@
 }
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Create New Role</a>
+    <a asp-action="Create" class="btn btn-primary">Создать роль</a>
 </p>
 
 <table class="table table-striped table-hover">
     <thead>
         <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Users</th>
-            <th>Actions</th>
+            <th>Название</th>
+            <th>Описание</th>
+            <th>Пользователей</th>
+            <th>Действия</th>
         </tr>
     </thead>
     <tbody>
@@ -32,12 +32,12 @@
         {
             <tr>
                 <td><strong>@item.Name</strong></td>
-                <td>@(item.Description ?? "-")</td>
-                <td><span class="badge bg-secondary">@item.UserRoles.Count users</span></td>
+                <td>@(item.Description ?? "—")</td>
+                <td><span class="badge bg-secondary">@item.UserRoles.Count чел.</span></td>
                 <td>
                     <div class="btn-group" role="group">
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Редактировать</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Удалить</a>
                     </div>
                 </td>
             </tr>
@@ -47,5 +47,5 @@
 
 @if (!Model.Any())
 {
-    <div class="alert alert-info">No roles found. Click "Create New Role" to add one.</div>
+    <div class="alert alert-info">Роли не найдены. Нажмите «Создать роль» для добавления.</div>
 }

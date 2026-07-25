@@ -46,7 +46,7 @@ namespace JwtAuthApp.Controllers
             {
                 if (await _context.Users.AnyAsync(u => u.UserName == viewModel.UserName))
                 {
-                    ModelState.AddModelError("UserName", "Username already exists");
+                    ModelState.AddModelError("UserName", "Пользователь с таким именем уже существует");
                     return View(viewModel);
                 }
 
@@ -191,7 +191,7 @@ namespace JwtAuthApp.Controllers
             user.Role = selectedRoleNames.FirstOrDefault() ?? "User";
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = "User roles updated successfully!";
+            TempData["Success"] = "Роли пользователя обновлены!";
             return RedirectToAction(nameof(Index));
         }
 
@@ -217,7 +217,7 @@ namespace JwtAuthApp.Controllers
                 _context.UserRoles.Add(new UserRole { UserId = userId, RoleId = role.Id });
                 user.Role = roleName;
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"Role \"{roleName}\" added to {user.UserName}";
+                TempData["Success"] = $"Роль \"{roleName}\" добавлена пользователю {user.UserName}";
             }
 
             return RedirectToAction(nameof(Index));
@@ -245,7 +245,7 @@ namespace JwtAuthApp.Controllers
                 user.Role = remainingRoles.FirstOrDefault()?.Role?.Name ?? "User";
 
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"Role \"{roleName}\" removed from {user.UserName}";
+                TempData["Success"] = $"Роль \"{roleName}\" удалена у пользователя {user.UserName}";
             }
 
             return RedirectToAction(nameof(Index));
@@ -281,7 +281,7 @@ namespace JwtAuthApp.Controllers
                 user.Salt = salt;
 
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"Password for \"{user.UserName}\" changed successfully!";
+                TempData["Success"] = $"Пароль для \"{user.UserName}\" успешно изменён!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -299,8 +299,8 @@ namespace JwtAuthApp.Controllers
             user.IsBlocked = !user.IsBlocked;
             await _context.SaveChangesAsync();
 
-            var status = user.IsBlocked ? "blocked" : "unblocked";
-            TempData["Success"] = $"User \"{user.UserName}\" has been {status}!";
+            var status = user.IsBlocked ? "заблокирован" : "разблокирован";
+            TempData["Success"] = $"Пользователь \"{user.UserName}\" {status}!";
 
             return RedirectToAction(nameof(Index));
         }

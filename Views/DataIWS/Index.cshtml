@@ -1,10 +1,10 @@
 @model IEnumerable<JwtAuthApp.Models.DataIWS>
 
 @{
-    ViewData["Title"] = "Data IWS";
+    ViewData["Title"] = "Данные IWS";
 }
 
-<h2>Data IWS</h2>
+<h2>Данные IWS</h2>
 
 @if (TempData["Success"] != null)
 {
@@ -16,18 +16,18 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <a asp-action="Create" class="btn btn-primary">Add Data Entry</a>
+        <a asp-action="Create" class="btn btn-primary">Создать запись</a>
     </div>
     <div>
         <form asp-action="Index" method="get" class="d-flex gap-2">
             <select name="sensorId" class="form-select" style="width: auto;">
-                <option value="">All sensors</option>
+                <option value="">Все датчики</option>
                 @foreach (var sensor in (ViewBag.Sensors as IEnumerable<JwtAuthApp.Models.Sensor>) ?? Enumerable.Empty<JwtAuthApp.Models.Sensor>())
                 {
                     <option value="@sensor.Id" selected="@(ViewBag.SelectedSensorId?.ToString() == sensor.Id.ToString())">@sensor.Name</option>
                 }
             </select>
-            <button type="submit" class="btn btn-outline-secondary">Filter</button>
+            <button type="submit" class="btn btn-outline-secondary">Фильтр</button>
         </form>
     </div>
 </div>
@@ -35,26 +35,26 @@
 <table class="table table-striped table-hover">
     <thead>
         <tr>
-            <th>Sensor</th>
-            <th>Value</th>
-            <th>Recorded At</th>
-            <th>Created</th>
-            <th>Actions</th>
+            <th>Датчик</th>
+            <th>Значение</th>
+            <th>Дата записи</th>
+            <th>Создан</th>
+            <th>Действия</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
             <tr>
-                <td>@(item.Sensor?.Name ?? $"Sensor #{item.SensorId}")</td>
+                <td>@(item.Sensor?.Name ?? $"Датчик #{item.SensorId}")</td>
                 <td>@item.Value</td>
                 <td>@item.RecordedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
                 <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                 <td>
                     <div class="btn-group" role="group">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Подробнее</a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Редактировать</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Удалить</a>
                     </div>
                 </td>
             </tr>

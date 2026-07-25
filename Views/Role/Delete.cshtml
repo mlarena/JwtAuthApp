@@ -1,29 +1,29 @@
 @model JwtAuthApp.Models.Role
 
 @{
-    ViewData["Title"] = "Delete Role";
+    ViewData["Title"] = "Удаление роли";
 }
 
-<h2>Delete Role</h2>
+<h2>Удаление роли</h2>
 
 <div class="alert alert-danger">
-    <h4>Are you sure you want to delete this role?</h4>
+    <h4>Вы уверены, что хотите удалить эту роль?</h4>
     @if (Model.UserRoles.Any())
     {
-        <p class="mb-0"><strong>Warning:</strong> This role is assigned to @Model.UserRoles.Count user(s). They will lose this role's permissions.</p>
+        <p class="mb-0"><strong>Внимание:</strong> Эта роль назначена @Model.UserRoles.Count пользователю(ям). Они потеряют доступ к ресурсам этой роли.</p>
     }
 </div>
 
 <div class="card">
     <div class="card-body">
         <dl class="row">
-            <dt class="col-sm-3">Name</dt>
+            <dt class="col-sm-3">Название</dt>
             <dd class="col-sm-9">@Model.Name</dd>
 
-            <dt class="col-sm-3">Description</dt>
-            <dd class="col-sm-9">@(Model.Description ?? "-")</dd>
+            <dt class="col-sm-3">Описание</dt>
+            <dd class="col-sm-9">@(Model.Description ?? "—")</dd>
 
-            <dt class="col-sm-3">Users with this role</dt>
+            <dt class="col-sm-3">Пользователи с этой ролью</dt>
             <dd class="col-sm-9">
                 @if (Model.UserRoles.Any())
                 {
@@ -31,7 +31,7 @@
                 }
                 else
                 {
-                    <span class="text-muted">None</span>
+                    <span class="text-muted">Нет</span>
                 }
             </dd>
         </dl>
@@ -39,8 +39,8 @@
     <div class="card-footer">
         <form asp-action="Delete" method="post">
             <input type="hidden" asp-for="Id" />
-            <button type="submit" class="btn btn-danger">Delete</button>
-            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-danger">Удалить</button>
+            <a asp-action="Index" class="btn btn-secondary">Отмена</a>
         </form>
     </div>
 </div>

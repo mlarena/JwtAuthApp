@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -26,10 +26,10 @@
                             @await Component.InvokeAsync("Menu")
                         </ul>
                         <div class="navbar-nav">
-                            <span class="nav-link text-dark">Hello, @User.Identity.Name!</span>
+                            <span class="nav-link text-dark">Привет, @User.Identity.Name!</span>
                             <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline" id="logoutForm">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+                                <button type="submit" class="nav-link btn btn-link text-dark">Выход</button>
                             </form>
                         </div>
                     </div>
@@ -48,7 +48,7 @@
     {
         <footer class="border-top footer text-muted">
             <div class="container">
-                © 2026 - JwtAuthApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                © 2026 - JwtAuthApp
             </div>
         </footer>
     }

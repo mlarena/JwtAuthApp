@@ -3,12 +3,12 @@
 @using System.Text.Json
 
 @{
-    ViewData["Title"] = "Детали аудита";
+    ViewData["Title"] = "Подробнее";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Детали аудита</h2>
-    <a asp-action="Index" class="btn btn-primary">Назад к списку</a>
+    <h2 class="mb-0">Подробнее</h2>
+    <a asp-action="Index" class="btn btn-primary">Назад</a>
 </div>
 
 @if (Model.Type == AuditLogType.Action && Model.Log != null)
@@ -24,13 +24,13 @@
                 <dt class="col-sm-3">ID записи</dt>
                 <dd class="col-sm-9">@log.Id</dd>
 
-                <dt class="col-sm-3">Время</dt>
+                <dt class="col-sm-3">Дата</dt>
                 <dd class="col-sm-9">@log.Timestamp.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss.fff")</dd>
 
                 <dt class="col-sm-3">Пользователь</dt>
                 <dd class="col-sm-9">@log.UserName (ID: @(log.UserId?.ToString() ?? "—"))</dd>
 
-                <dt class="col-sm-3">HTTP метод</dt>
+                <dt class="col-sm-3">Метод</dt>
                 <dd class="col-sm-9">@log.HttpMethod</dd>
 
                 <dt class="col-sm-3">URL</dt>
@@ -42,7 +42,7 @@
                 <dt class="col-sm-3">User Agent</dt>
                 <dd class="col-sm-9"><small>@log.UserAgent</small></dd>
 
-                <dt class="col-sm-3">Успешно</dt>
+                <dt class="col-sm-3">Успех</dt>
                 <dd class="col-sm-9">
                     @if (log.IsSuccess == true)
                     {
@@ -63,7 +63,7 @@
                     <dd class="col-sm-9">@log.TargetId</dd>
                 }
 
-                <dt class="col-sm-3">Details</dt>
+                <dt class="col-sm-3">Подробнее</dt>
                 <dd class="col-sm-9"><pre class="bg-light p-2 mb-0">@log.Details</pre></dd>
             </dl>
         </div>
@@ -82,7 +82,7 @@ else if (Model.Type == AuditLogType.Change && Model.Log != null)
                 <dt class="col-sm-3">ID записи</dt>
                 <dd class="col-sm-9">@log.Id</dd>
 
-                <dt class="col-sm-3">Время</dt>
+                <dt class="col-sm-3">Дата</dt>
                 <dd class="col-sm-9">@log.Timestamp.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss.fff")</dd>
 
                 <dt class="col-sm-3">Пользователь</dt>
@@ -91,7 +91,7 @@ else if (Model.Type == AuditLogType.Change && Model.Log != null)
                 <dt class="col-sm-3">Сущность</dt>
                 <dd class="col-sm-9">@log.EntityType</dd>
 
-                <dt class="col-sm-3">EntityId</dt>
+                <dt class="col-sm-3">ID сущности</dt>
                 <dd class="col-sm-9">@((log.EntityId?.ToString()) ?? "—")</dd>
 
                 <dt class="col-sm-3">Тип изменения</dt>
@@ -103,7 +103,7 @@ else if (Model.Type == AuditLogType.Change && Model.Log != null)
     @if (log.ChangeType == "Added" && !string.IsNullOrEmpty(log.NewValues))
     {
         <div class="card mb-3">
-            <div class="card-header bg-success text-white"><strong>Новые данные</strong></div>
+            <div class="card-header bg-success text-white"><strong>Новые значения</strong></div>
             <div class="card-body">
                 @{
                     var newData = JsonSerializer.Deserialize<Dictionary<string, object>>(log.NewValues);
@@ -131,7 +131,7 @@ else if (Model.Type == AuditLogType.Change && Model.Log != null)
     @if (log.ChangeType == "Deleted" && !string.IsNullOrEmpty(log.OriginalValues))
     {
         <div class="card mb-3">
-            <div class="card-header bg-danger text-white"><strong>Удалённые данные</strong></div>
+            <div class="card-header bg-danger text-white"><strong>Исходные значения</strong></div>
             <div class="card-body">
                 @{
                     var originalData = JsonSerializer.Deserialize<Dictionary<string, object>>(log.OriginalValues);
@@ -161,7 +161,7 @@ else if (Model.Type == AuditLogType.Change && Model.Log != null)
         @if (!string.IsNullOrEmpty(log.ChangedProperties))
         {
             <div class="card mb-3">
-                <div class="card-header bg-warning"><strong>Изменённые поля</strong></div>
+                <div class="card-header bg-warning"><strong>Изменённые свойства</strong></div>
                 <div class="card-body">
                     @{
                         var changes = JsonSerializer.Deserialize<List<JsonElement>>(log.ChangedProperties);
@@ -189,7 +189,7 @@ else if (Model.Type == AuditLogType.Change && Model.Log != null)
         <div class="row">
             <div class="col-md-6">
                 <div class="card mb-3">
-                    <div class="card-header bg-secondary text-white"><strong>До</strong></div>
+                    <div class="card-header bg-secondary text-white"><strong>Исходные значения</strong></div>
                     <div class="card-body">
                         @{
                             var originalData = JsonSerializer.Deserialize<Dictionary<string, object>>(log.OriginalValues ?? "{}");
@@ -215,7 +215,7 @@ else if (Model.Type == AuditLogType.Change && Model.Log != null)
             </div>
             <div class="col-md-6">
                 <div class="card mb-3">
-                    <div class="card-header bg-info text-white"><strong>После</strong></div>
+                    <div class="card-header bg-info text-white"><strong>Новые значения</strong></div>
                     <div class="card-body">
                         @{
                             var newData = JsonSerializer.Deserialize<Dictionary<string, object>>(log.NewValues ?? "{}");

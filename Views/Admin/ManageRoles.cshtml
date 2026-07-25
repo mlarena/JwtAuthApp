@@ -1,7 +1,7 @@
 @model JwtAuthApp.ViewModels.ManageUserRolesViewModel
 
 @{
-    ViewData["Title"] = $"Roles — {Model.UserName}";
+    ViewData["Title"] = $"Роли — {Model.UserName}";
 }
 
 <div class="container mt-4">
@@ -13,7 +13,7 @@
         </div>
     }
 
-    <!-- User info card -->
+    <!-- Карточка пользователя -->
     <div class="card mb-4">
         <div class="card-body d-flex align-items-center gap-3">
             <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:56px;height:56px;font-size:1.5rem;">
@@ -21,24 +21,24 @@
             </div>
             <div>
                 <h4 class="mb-0">@Model.UserName</h4>
-                <span class="text-muted">User ID: @Model.UserId</span>
+                <span class="text-muted">ID пользователя: @Model.UserId</span>
             </div>
             <div class="ms-auto">
                 @{
                     var selectedCount = Model.AllRoles.Count(r => r.IsSelected);
                 }
-                <span class="badge bg-success fs-6">@selectedCount role@(selectedCount != 1 ? "s" : "") assigned</span>
+                <span class="badge bg-success fs-6">Назначено ролей: @selectedCount</span>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- Left column: Assigned roles -->
+        <!-- Назначенные роли -->
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-header bg-success text-white d-flex align-items-center">
                     <i class="bi bi-shield-check me-2"></i>
-                    <h5 class="mb-0">Assigned Roles</h5>
+                    <h5 class="mb-0">Назначенные роли</h5>
                 </div>
                 <div class="card-body">
                     @{
@@ -70,7 +70,7 @@
                                                 <strong>@Model.AllRoles[i].RoleName</strong>
                                             </div>
                                         </div>
-                                        <span class="badge bg-success">Active</span>
+                                        <span class="badge bg-success">Активна</span>
                                     </div>
                                 }
                             }
@@ -80,20 +80,20 @@
                     {
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-shield-x fs-1 d-block mb-2"></i>
-                            <p class="mb-0">No roles assigned yet</p>
-                            <small>Select a role from the right panel</small>
+                            <p class="mb-0">Роли ещё не назначены</p>
+                            <small>Выберите роль из правой панели</small>
                         </div>
                     }
                 </div>
             </div>
         </div>
 
-        <!-- Right column: Available roles -->
+        <!-- Доступные роли -->
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-header bg-primary text-white d-flex align-items-center">
                     <i class="bi bi-plus-shield me-2"></i>
-                    <h5 class="mb-0">Available Roles</h5>
+                    <h5 class="mb-0">Доступные роли</h5>
                 </div>
                 <div class="card-body">
                     @if (availableRoles.Any())
@@ -117,7 +117,7 @@
                                         <button type="button" class="btn btn-sm btn-outline-success add-role-btn"
                                                 data-index="@i"
                                                 onclick="toggleRole(this, @i, true)">
-                                            <i class="bi bi-plus-lg"></i> Add
+                                            <i class="bi bi-plus-lg"></i> Добавить
                                         </button>
                                     </div>
                                 }
@@ -128,7 +128,7 @@
                     {
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-check-circle fs-1 d-block mb-2"></i>
-                            <p class="mb-0">All roles are already assigned</p>
+                            <p class="mb-0">Все роли уже назначены</p>
                         </div>
                     }
                 </div>
@@ -136,7 +136,7 @@
         </div>
     </div>
 
-    <!-- Action buttons -->
+    <!-- Кнопки -->
     <form asp-action="ManageRoles" method="post" id="rolesForm">
         <input type="hidden" asp-for="UserId" />
         <input type="hidden" asp-for="UserName" />
@@ -150,10 +150,10 @@
 
         <div class="d-flex justify-content-between mt-4">
             <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
-                <i class="bi bi-arrow-left"></i> Back to Users
+                <i class="bi bi-arrow-left"></i> Назад к списку
             </a>
             <button type="submit" class="btn btn-primary btn-lg" id="saveBtn">
-                <i class="bi bi-check-lg"></i> Save Changes
+                <i class="bi bi-check-lg"></i> Сохранить
             </button>
         </div>
     </form>
@@ -165,38 +165,31 @@
             var hiddenInput = document.getElementById('role_' + index);
             hiddenInput.value = isAdding ? 'true' : 'false';
 
-            // Visually move the item
             var item = btn.closest('.list-group-item');
             var targetContainer;
 
             if (isAdding) {
-                // Move to assigned column (left)
                 targetContainer = document.querySelector('.col-md-6:first-child .list-group');
                 if (!targetContainer || targetContainer.querySelector('.text-center')) {
-                    // Replace empty state with list
                     var leftCard = document.querySelector('.col-md-6:first-child .card-body');
                     leftCard.innerHTML = '<div class="list-group list-group-flush assigned-list"></div>';
                     targetContainer = leftCard.querySelector('.list-group');
                 }
 
-                // Update icon
                 var icon = item.querySelector('i');
                 icon.className = 'bi bi-shield-fill text-success me-3 fs-5';
 
-                // Update button
                 btn.className = 'btn btn-sm btn-outline-danger remove-role-btn';
-                btn.innerHTML = '<i class="bi bi-dash-lg"></i> Remove';
+                btn.innerHTML = '<i class="bi bi-dash-lg"></i> Удалить';
                 btn.setAttribute('onclick', 'toggleRole(this, ' + index + ', false)');
 
-                // Add badge
                 var badge = document.createElement('span');
                 badge.className = 'badge bg-success';
-                badge.textContent = 'Active';
+                badge.textContent = 'Активна';
                 item.appendChild(badge);
 
                 targetContainer.appendChild(item);
             } else {
-                // Move to available column (right)
                 targetContainer = document.querySelector('.col-md-6:last-of-type .list-group');
                 if (!targetContainer) {
                     var rightCard = document.querySelector('.col-md-6:last-of-type .card-body');
@@ -204,16 +197,13 @@
                     targetContainer = rightCard.querySelector('.list-group');
                 }
 
-                // Update icon
                 var icon = item.querySelector('i');
                 icon.className = 'bi bi-shield text-muted me-3 fs-5';
 
-                // Update button
                 btn.className = 'btn btn-sm btn-outline-success add-role-btn';
-                btn.innerHTML = '<i class="bi bi-plus-lg"></i> Add';
+                btn.innerHTML = '<i class="bi bi-plus-lg"></i> Добавить';
                 btn.setAttribute('onclick', 'toggleRole(this, ' + index + ', true)');
 
-                // Remove badge
                 var badge = item.querySelector('.badge');
                 if (badge) badge.remove();
 
@@ -230,20 +220,18 @@
             var leftItems = leftList ? leftList.querySelectorAll('.list-group-item').length : 0;
             var rightItems = rightList ? rightList.querySelectorAll('.list-group-item').length : 0;
 
-            // Update left empty state
             var leftEmpty = document.querySelector('.col-md-6:first-child .text-center');
             if (leftItems === 0 && !leftEmpty) {
                 var leftBody = document.querySelector('.col-md-6:first-child .card-body');
-                leftBody.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-shield-x fs-1 d-block mb-2"></i><p class="mb-0">No roles assigned yet</p><small>Select a role from the right panel</small></div>';
+                leftBody.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-shield-x fs-1 d-block mb-2"></i><p class="mb-0">Роли ещё не назначены</p><small>Выберите роль из правой панели</small></div>';
             } else if (leftItems > 0 && leftEmpty) {
                 leftEmpty.remove();
             }
 
-            // Update right empty state
             var rightEmpty = document.querySelector('.col-md-6:last-of-type .text-center');
             if (rightItems === 0 && !rightEmpty) {
                 var rightBody = document.querySelector('.col-md-6:last-of-type .card-body');
-                rightBody.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-check-circle fs-1 d-block mb-2"></i><p class="mb-0">All roles are already assigned</p></div>';
+                rightBody.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-check-circle fs-1 d-block mb-2"></i><p class="mb-0">Все роли уже назначены</p></div>';
             } else if (rightItems > 0 && rightEmpty) {
                 rightEmpty.remove();
             }

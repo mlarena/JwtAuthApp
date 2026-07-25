@@ -36,7 +36,7 @@ namespace JwtAuthApp.Controllers
         {
             if (await _context.Roles.AnyAsync(r => r.Name == role.Name))
             {
-                ModelState.AddModelError("Name", "Role with this name already exists");
+                ModelState.AddModelError("Name", "Роль с таким именем уже существует");
                 return View(role);
             }
 
@@ -44,7 +44,7 @@ namespace JwtAuthApp.Controllers
             {
                 _context.Roles.Add(role);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Role created successfully!";
+                TempData["Success"] = "Роль успешно создана!";
                 return RedirectToAction(nameof(Index));
             }
             return View(role);
@@ -65,7 +65,7 @@ namespace JwtAuthApp.Controllers
 
             if (await _context.Roles.AnyAsync(r => r.Name == role.Name && r.Id != id))
             {
-                ModelState.AddModelError("Name", "Role with this name already exists");
+                ModelState.AddModelError("Name", "Роль с таким именем уже существует");
                 return View(role);
             }
 
@@ -81,7 +81,7 @@ namespace JwtAuthApp.Controllers
 
                     _context.Update(existing);
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Role updated successfully!";
+                    TempData["Success"] = "Роль успешно обновлена!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
@@ -113,7 +113,7 @@ namespace JwtAuthApp.Controllers
             {
                 _context.Roles.Remove(role);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Role deleted successfully!";
+                TempData["Success"] = "Роль успешно удалена!";
             }
             return RedirectToAction(nameof(Index));
         }
