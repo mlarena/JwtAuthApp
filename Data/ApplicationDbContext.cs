@@ -15,6 +15,8 @@ namespace JwtAuthApp.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<MonitoringPost> MonitoringPosts { get; set; }
+        public DbSet<Sensor> Sensors { get; set; }
+        public DbSet<DataIWS> DataIWS { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         
         // Конструктор с IHttpContextAccessor
@@ -41,6 +43,26 @@ namespace JwtAuthApp.Data
                 entity.Property(u => u.UserName).IsRequired().HasMaxLength(100);
                 entity.Property(u => u.Role).IsRequired().HasMaxLength(50);
                 entity.Property(u => u.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            });
+
+            // Настройка таблицы Sensors
+            modelBuilder.Entity<Sensor>(entity =>
+            {
+                entity.Property(s => s.Name).IsRequired().HasMaxLength(255);
+                entity.Property(s => s.Type).HasMaxLength(100);
+                entity.Property(s => s.Unit).HasMaxLength(50);
+            });
+
+            // Настройка таблицы DataIWS
+            modelBuilder.Entity<DataIWS>(entity =>
+            {
+                entity.HasOne(d => d.Sensor)
+                    .WithMany()
+                    .HasForeignKey(d => d.SensorId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(d => d.SensorId);
+                entity.HasIndex(d => d.RecordedAt);
             });
 
             // Настройка таблицы аудита (действия + изменения)

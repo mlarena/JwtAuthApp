@@ -1,0 +1,50 @@
+@model JwtAuthApp.Models.DataIWS
+
+@{
+    ViewData["Title"] = "Edit Data Entry";
+}
+
+<h2>Edit Data Entry</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="CreatedAt" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="SensorId" class="control-label">Sensor</label>
+                <select asp-for="SensorId" class="form-control">
+                    <option value="">Select sensor...</option>
+                    @foreach (var sensor in (ViewBag.Sensors as IEnumerable<JwtAuthApp.Models.Sensor>) ?? Enumerable.Empty<JwtAuthApp.Models.Sensor>())
+                    {
+                        <option value="@sensor.Id">@sensor.Name @(sensor.Unit != null ? $"({sensor.Unit})" : "")</option>
+                    }
+                </select>
+                <span asp-validation-for="SensorId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Value" class="control-label"></label>
+                <input asp-for="Value" class="form-control" type="number" step="any" />
+                <span asp-validation-for="Value" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="RecordedAt" class="control-label">Recorded At</label>
+                <input asp-for="RecordedAt" class="form-control" type="datetime-local" />
+                <span asp-validation-for="RecordedAt" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,32 @@
+@model JwtAuthApp.Models.DataIWS
+
+@{
+    ViewData["Title"] = "Data Entry Details";
+}
+
+<h2>Data Entry Details</h2>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Id</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+
+            <dt class="col-sm-3">Sensor</dt>
+            <dd class="col-sm-9">@(Model.Sensor?.Name ?? $"Sensor #{Model.SensorId}")</dd>
+
+            <dt class="col-sm-3">Value</dt>
+            <dd class="col-sm-9">@Model.Value</dd>
+
+            <dt class="col-sm-3">Recorded At</dt>
+            <dd class="col-sm-9">@Model.RecordedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">Created</dt>
+            <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
