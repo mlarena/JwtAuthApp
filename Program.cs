@@ -8,6 +8,8 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using Microsoft.Extensions.Caching.Memory;
+using System.IdentityModel.Tokens.Jwt;
 using JwtAuthApp.Filters;
 using JwtAuthApp.Middleware;
 
@@ -53,6 +55,51 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         // Добавляем обработку события, когда токен не валиден
         options.Events = new JwtBearerEvents
         {
+            // Проверка отзыва токена: iat должен быть позже TokenValidAfter пользователя,
+            // пользователь не заблокирован (logout, смена пароля, блокировка инвалидируют токен)
+            OnTokenValidated = async context =>
+            {
+                var userIdClaim = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+                {
+                    context.Fail("Token has no valid user identifier");
+                    return;
+                }
+
+                var cache = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                var cacheKey = $"token-revocation:{userId}";
+                if (!cache.TryGetValue(cacheKey, out (DateTime? ValidAfter, bool IsBlocked) revocation))
+                {
+                    using var scope = context.HttpContext.RequestServices.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var user = await db.Users
+                        .AsNoTracking()
+                        .Where(u => u.Id == userId)
+                        .Select(u => new { u.TokenValidAfter, u.IsBlocked })
+                        .FirstOrDefaultAsync();
+                    revocation = (user?.TokenValidAfter, user?.IsBlocked ?? true);
+                    cache.Set(cacheKey, revocation, TimeSpan.FromSeconds(30));
+                }
+
+                if (revocation.IsBlocked)
+                {
+                    context.Fail("User is blocked");
+                    return;
+                }
+
+                if (revocation.ValidAfter.HasValue)
+                {
+                    var iatClaim = context.Principal?.FindFirst(JwtRegisteredClaimNames.Iat)?.Value;
+                    if (iatClaim != null && long.TryParse(iatClaim, out var iatUnix))
+                    {
+                        var issuedAt = DateTimeOffset.FromUnixTimeSeconds(iatUnix).UtcDateTime;
+                        if (issuedAt < revocation.ValidAfter.Value)
+                        {
+                            context.Fail("Token has been revoked");
+                        }
+                    }
+                }
+            },
             OnChallenge = context =>
             {
                 context.HandleResponse();
@@ -87,6 +134,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ControllerAccessCache>();
 // Настройка MVC с глобальным фильтром логирования
 builder.Services.AddControllersWithViews(options =>
 {
@@ -148,151 +197,10 @@ builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
-// Настройка миграций базы данных
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();
-
-    // Создаем роли, если их нет
-    if (!dbContext.Roles.Any())
-    {
-        dbContext.Roles.AddRange(
-            new JwtAuthApp.Models.Role { Name = "Admin", Description = "Системный администратор" },
-            new JwtAuthApp.Models.Role { Name = "User", Description = "Обычный пользователь" }
-        );
-        dbContext.SaveChanges();
-    }
-
-    // Создаем суперпользователя, если его нет.
-    // Пароль берётся из Security:SuperUserPassword (env: Security__SuperUserPassword);
-    // если не задан — генерируется случайный и логируется один раз.
-    if (!dbContext.Users.Any(u => u.UserName == "su"))
-    {
-        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
-        var superUserPassword = builder.Configuration["Security:SuperUserPassword"];
-        if (string.IsNullOrWhiteSpace(superUserPassword))
-        {
-            superUserPassword = System.Security.Cryptography.RandomNumberGenerator.GetHexString(24);
-            app.Logger.LogWarning(
-                "Security:SuperUserPassword не задан. Для пользователя 'su' сгенерирован случайный пароль: {Password}. " +
-                "Смените его и сохраните в безопасном месте.",
-                superUserPassword);
-        }
-        var (hash, salt) = authService.HashPassword(superUserPassword);
-
-        var superUser = new JwtAuthApp.Models.User
-        {
-            UserName = "su",
-            PasswordHash = hash,
-            Salt = salt,
-            Role = "Admin"
-        };
-
-        dbContext.Users.Add(superUser);
-        dbContext.SaveChanges();
-
-        // Назначаем роль Admin
-        var adminRole = dbContext.Roles.FirstOrDefault(r => r.Name == "Admin");
-        if (adminRole != null)
-        {
-            dbContext.UserRoles.Add(new JwtAuthApp.Models.UserRole
-            {
-                UserId = superUser.Id,
-                RoleId = adminRole.Id
-            });
-            dbContext.SaveChanges();
-        }
-    }
-
-    // Назначаем роли существующим пользователям, у которых нет UserRole записей
-    var usersWithoutRoles = dbContext.Users
-        .Where(u => !dbContext.UserRoles.Any(ur => ur.UserId == u.Id))
-        .ToList();
-    if (usersWithoutRoles.Any())
-    {
-        var userRole = dbContext.Roles.FirstOrDefault(r => r.Name == "User");
-        var adminRole = dbContext.Roles.FirstOrDefault(r => r.Name == "Admin");
-        if (userRole != null)
-        {
-            foreach (var u in usersWithoutRoles)
-            {
-                var roleToAssign = u.Role == "Admin" ? adminRole : userRole;
-                if (roleToAssign != null)
-                {
-                    dbContext.UserRoles.Add(new JwtAuthApp.Models.UserRole
-                    {
-                        UserId = u.Id,
-                        RoleId = roleToAssign.Id
-                    });
-                }
-            }
-            dbContext.SaveChanges();
-        }
-    }
-
-    // Seed ControllerAccess если таблица пуста
-    if (!dbContext.ControllerAccesses.Any())
-    {
-        var adminRoleForSeed = dbContext.Roles.FirstOrDefault(r => r.Name == "Admin");
-        var userRoleForSeed = dbContext.Roles.FirstOrDefault(r => r.Name == "User");
-
-        var accessEntries = new List<JwtAuthApp.Models.ControllerAccess>();
-
-        void AddAccess(string controller, string display, string? desc, bool allowAll, string[]? roleNames)
-        {
-            var entry = new JwtAuthApp.Models.ControllerAccess
-            {
-                ControllerName = controller,
-                DisplayName = display,
-                Description = desc,
-                AllowAllAuthenticated = allowAll
-            };
-            accessEntries.Add(entry);
-        }
-
-        AddAccess("Secure", "Защищённая", "Защищённая страница", false, new[] { "User", "Admin" });
-        AddAccess("Test", "Тест", "Тестовая страница", false, new[] { "User", "Admin" });
-        AddAccess("MonitoringPost", "Посты мониторинга", "Посты мониторинга (CRUD)", false, new[] { "User", "Admin" });
-        AddAccess("Sensor", "Датчики", "Датчики (CRUD)", false, new[] { "User", "Admin" });
-        AddAccess("SensorType", "Типы датчиков", "Справочник типов датчиков", false, new[] { "User", "Admin" });
-        AddAccess("DOVData", "Данные DOV", "Данные видимости (DOV)", false, new[] { "User", "Admin" });
-        AddAccess("DSPDData", "Данные DSPD", "Данные состояния дороги (DSPD)", false, new[] { "User", "Admin" });
-        AddAccess("DustData", "Данные пыли", "Данные пыли (PM10/PM2.5/PM1)", false, new[] { "User", "Admin" });
-        AddAccess("IWSData", "Метеоданные IWS", "Метеоданные (IWS)", false, new[] { "User", "Admin" });
-        AddAccess("MUEKSData", "Данные MUEKS", "Данные питания/системы (MUEKS)", false, new[] { "User", "Admin" });
-        AddAccess("PollingSession", "Сессии опроса", "Сессии опроса датчиков", false, new[] { "User", "Admin" });
-        AddAccess("SensorResults", "Результаты опроса", "Результаты опроса датчиков", false, new[] { "User", "Admin" });
-        AddAccess("Admin", "Пользователи", "Управление пользователями", true, null);
-        AddAccess("Role", "Роли", "Управление ролями", true, null);
-        AddAccess("Access", "Управление доступом", "Правила доступа к контроллерам", true, null);
-        AddAccess("Audit", "Журнал аудита", "Журнал действий системы", true, null);
-
-        dbContext.ControllerAccesses.AddRange(accessEntries);
-        dbContext.SaveChanges();
-
-        // Назначаем роли к записям
-        foreach (var entry in accessEntries)
-        {
-            var saved = dbContext.ControllerAccesses.First(c => c.ControllerName == entry.ControllerName);
-            if (entry.AllowAllAuthenticated)
-            {
-                // AllowAll — не привязываем роли
-                continue;
-            }
-            // Привязываем все роли (User + Admin)
-            if (adminRoleForSeed != null)
-                dbContext.ControllerAccessRoles.Add(new JwtAuthApp.Models.ControllerAccessRole { ControllerAccessId = saved.Id, RoleId = adminRoleForSeed.Id });
-            if (userRoleForSeed != null)
-                dbContext.ControllerAccessRoles.Add(new JwtAuthApp.Models.ControllerAccessRole { ControllerAccessId = saved.Id, RoleId = userRoleForSeed.Id });
-        }
-        dbContext.SaveChanges();
-    }
-
-    // Автообнаружение новых контроллеров
-    ControllerDiscoveryService.DiscoverAndRegister(app);
-}
+// Инициализация БД: миграции + начальные данные (роли, суперпользователь, правила доступа)
+DbSeeder.Initialize(app, builder.Configuration, app.Logger);
 
 // Конфигурация пайплайна
 if (app.Environment.IsDevelopment())

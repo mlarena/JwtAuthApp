@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JwtAuthApp.Data;
 using JwtAuthApp.Models;
+using JwtAuthApp.Services;
 using JwtAuthApp.ViewModels;
 
 namespace JwtAuthApp.Controllers
@@ -11,10 +12,12 @@ namespace JwtAuthApp.Controllers
     public class AccessController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ControllerAccessCache _accessCache;
 
-        public AccessController(ApplicationDbContext context)
+        public AccessController(ApplicationDbContext context, ControllerAccessCache accessCache)
         {
             _context = context;
+            _accessCache = accessCache;
         }
 
         public async Task<IActionResult> Index()
@@ -90,6 +93,7 @@ namespace JwtAuthApp.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                _accessCache.Invalidate();
                 TempData["Success"] = $"Правила доступа для \"{access.DisplayName}\" обновлены!";
                 return RedirectToAction(nameof(Index));
             }
@@ -132,6 +136,7 @@ namespace JwtAuthApp.Controllers
             }
 
             await _context.SaveChangesAsync();
+            _accessCache.Invalidate();
             TempData["Success"] = $"Доступ для \"{access.DisplayName}\" обновлён!";
             return RedirectToAction(nameof(Index));
         }
@@ -145,6 +150,7 @@ namespace JwtAuthApp.Controllers
 
             access.AllowAllAuthenticated = !access.AllowAllAuthenticated;
             await _context.SaveChangesAsync();
+            _accessCache.Invalidate();
             TempData["Success"] = $"\"{access.DisplayName}\" — Разрешить всем установлено: {access.AllowAllAuthenticated}";
             return RedirectToAction(nameof(Index));
         }

@@ -76,18 +76,25 @@ namespace JwtAuthApp.Filters
             {
                 Type = AuditLogType.Action,
                 UserId = userId > 0 ? userId : null,
-                UserName = context.HttpContext.User.Identity?.Name ?? "Unknown",
-                Action = $"{controllerName}.{actionName}",
-                Details = BuildActionDetails(context),
+                UserName = Truncate(context.HttpContext.User.Identity?.Name ?? "Unknown", 100),
+                Action = Truncate($"{controllerName}.{actionName}", 200),
+                Details = Truncate(BuildActionDetails(context), 1000),
                 TargetId = targetId > 0 ? targetId : null,
-                HttpMethod = context.HttpContext.Request.Method,
-                Url = context.HttpContext.Request.Path.Value ?? "",
-                IpAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString(),
-                UserAgent = context.HttpContext.Request.Headers["User-Agent"].ToString(),
+                HttpMethod = Truncate(context.HttpContext.Request.Method, 10),
+                Url = Truncate(context.HttpContext.Request.Path.Value ?? "", 500),
+                IpAddress = Truncate(context.HttpContext.Connection.RemoteIpAddress?.ToString(), 50),
+                UserAgent = Truncate(context.HttpContext.Request.Headers["User-Agent"].ToString(), 500),
                 Timestamp = DateTime.UtcNow,
                 IsSuccess = resultContext.Exception == null || resultContext.ExceptionHandled,
                 ExecutionTimeMs = elapsedMs
             };
+        }
+
+        private static string Truncate(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length <= maxLength)
+                return value;
+            return value[..(maxLength - 3)] + "...";
         }
 
         private static string BuildActionDetails(ActionExecutingContext context)

@@ -1,19 +1,20 @@
-using Microsoft.EntityFrameworkCore;
-using JwtAuthApp.Data;
+using JwtAuthApp.Services;
 
 namespace JwtAuthApp.Middleware
 {
     public class ControllerAccessMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ControllerAccessCache _accessCache;
         private static readonly HashSet<string> _exemptControllers = new(StringComparer.OrdinalIgnoreCase)
         {
             "Auth", "Home"
         };
 
-        public ControllerAccessMiddleware(RequestDelegate next)
+        public ControllerAccessMiddleware(RequestDelegate next, ControllerAccessCache accessCache)
         {
             _next = next;
+            _accessCache = accessCache;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -32,13 +33,7 @@ namespace JwtAuthApp.Middleware
                 return;
             }
 
-            using var scope = context.RequestServices.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-            var access = await db.ControllerAccesses
-                .Include(c => c.ControllerAccessRoles)
-                    .ThenInclude(cr => cr.Role)
-                .FirstOrDefaultAsync(c => c.ControllerName == controllerName);
+            var access = await _accessCache.GetAsync(controllerName, context.RequestAborted);
 
             if (access == null)
             {

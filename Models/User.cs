@@ -37,6 +37,10 @@ namespace JwtAuthApp.Models
         [Column("IsBlocked")]
         public bool IsBlocked { get; set; } = false;
 
+        // Токены, выпущенные (iat) раньше этой метки, считаются отозванными (logout / смена пароля / блокировка)
+        [Column("TokenValidAfter")]
+        public DateTime? TokenValidAfter { get; set; }
+
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 
     }

@@ -15,7 +15,13 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.6.1" />
-  
+  </ItemGroup>
+
+  <!-- Исключаем тестовый проект из компиляции app-проекта (csproj в корне репозитория) -->
+  <ItemGroup>
+    <Compile Remove="tests\**" />
+    <None Remove="tests\**" />
+    <EmbeddedResource Remove="tests\**" />
   </ItemGroup>
 
 </Project>

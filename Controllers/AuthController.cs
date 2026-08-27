@@ -110,14 +110,26 @@ namespace JwtAuthApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
             // Проверяем, авторизован ли пользователь
             if (User.Identity?.IsAuthenticated == true)
             {
                 HttpContext.Session.Remove("JWToken");
+
+                // Отзываем текущий токен: все токены, выпущенные до текущего момента, становятся невалидными
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdClaim, out var userId))
+                {
+                    var user = await _context.Users.FindAsync(userId);
+                    if (user != null)
+                    {
+                        user.TokenValidAfter = DateTime.UtcNow;
+                        await _context.SaveChangesAsync();
+                    }
+                }
             }
-            
+
             // Всегда перенаправляем на Login, независимо от статуса
             return RedirectToAction("Login");
         }

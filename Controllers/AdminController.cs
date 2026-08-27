@@ -279,6 +279,8 @@ namespace JwtAuthApp.Controllers
                 var (hash, salt) = _authService.HashPassword(viewModel.NewPassword);
                 user.PasswordHash = hash;
                 user.Salt = salt;
+                // Отзываем все выпущенные ранее токены пользователя
+                user.TokenValidAfter = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
                 TempData["Success"] = $"Пароль для \"{user.UserName}\" успешно изменён!";
@@ -297,6 +299,8 @@ namespace JwtAuthApp.Controllers
             if (user == null) return NotFound();
 
             user.IsBlocked = !user.IsBlocked;
+            // При блокировке отзываем токены, при разблокировке — снимаем отзыв
+            user.TokenValidAfter = user.IsBlocked ? DateTime.UtcNow : null;
             await _context.SaveChangesAsync();
 
             var status = user.IsBlocked ? "заблокирован" : "разблокирован";
