@@ -52,9 +52,11 @@ namespace JwtAuthApp.Middleware
                 return;
             }
 
+            // Deny by default: если список ролей пуст и AllowAll выключен — доступ запрещён.
+            // Новый контроллер, добавленный ControllerDiscoveryService, закрыт до явной настройки.
             if (!access.ControllerAccessRoles.Any())
             {
-                await _next(context);
+                await DenyAccess(context, controllerName);
                 return;
             }
 

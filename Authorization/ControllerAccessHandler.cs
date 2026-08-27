@@ -52,7 +52,7 @@ namespace JwtAuthApp.Authorization
 
             if (!access.ControllerAccessRoles.Any())
             {
-                context.Succeed(requirement);
+                // Deny by default: пустой список ролей без AllowAll — доступ не выдаётся
                 return;
             }
 

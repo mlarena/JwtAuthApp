@@ -311,6 +311,12 @@ namespace JwtAuthApp.Data
             }
         }
 
+        // Свойства, которые не должны попадать в снимки аудита в открытом виде
+        private static readonly HashSet<string> SensitiveAuditProperties = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "PasswordHash", "Salt", "Password", "Token"
+        };
+
         private AuditLog? CreateChangeAuditLog(EntityEntry entry, string? userName, int? userId)
         {
             var entityType = entry.Entity.GetType().Name;
@@ -338,23 +344,23 @@ namespace JwtAuthApp.Data
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                        log.NewValues = JsonSerializer.Serialize(entry.CurrentValues.ToObject());
+                        log.NewValues = JsonSerializer.Serialize(GetSafeValues(entry.CurrentValues));
                         break;
 
                     case EntityState.Deleted:
-                        log.OriginalValues = JsonSerializer.Serialize(entry.OriginalValues.ToObject());
+                        log.OriginalValues = JsonSerializer.Serialize(GetSafeValues(entry.OriginalValues));
                         break;
 
                     case EntityState.Modified:
-                        var original = entry.OriginalValues.ToObject();
-                        var current = entry.CurrentValues.ToObject();
+                        var original = GetSafeValues(entry.OriginalValues);
+                        var current = GetSafeValues(entry.CurrentValues);
                         
                         log.OriginalValues = JsonSerializer.Serialize(original);
                         log.NewValues = JsonSerializer.Serialize(current);
                         
-                        // Определяем какие свойства изменились
+                        // Определяем какие свойства изменились (кроме чувствительных)
                         var changedProps = entry.Properties
-                            .Where(p => p.IsModified && !p.Metadata.Name.Contains("Password", StringComparison.OrdinalIgnoreCase))
+                            .Where(p => p.IsModified && !SensitiveAuditProperties.Contains(p.Metadata.Name))
                             .Select(p => new
                             {
                                 Property = p.Metadata.Name,
@@ -377,6 +383,14 @@ namespace JwtAuthApp.Data
             }
 
             return log;
+        }
+
+        // Формирует словарь значений сущности без чувствительных свойств (хеши, соли, токены)
+        private static Dictionary<string, object?> GetSafeValues(PropertyValues values)
+        {
+            return values.Properties
+                .Where(p => !SensitiveAuditProperties.Contains(p.Name))
+                .ToDictionary(p => p.Name, p => values[p]);
         }
 
         private int? GetEntityId(EntityEntry entry)

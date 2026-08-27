@@ -6,11 +6,28 @@ using JwtAuthApp.Data;
 using JwtAuthApp.Services;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using JwtAuthApp.Filters;
 using JwtAuthApp.Middleware;
-using JwtAuthApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Валидация обязательной конфигурации (секреты передаются через переменные окружения):
+//   ConnectionStrings__DefaultConnection, Jwt__Key, Security__SuperUserPassword
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Строка подключения не задана. Установите переменную окружения ConnectionStrings__DefaultConnection.");
+}
+
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
+{
+    throw new InvalidOperationException(
+        "JWT-ключ не задан или короче 32 символов. Установите переменную окружения Jwt__Key.");
+}
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
@@ -84,16 +101,18 @@ builder.Services.AddControllersWithViews(options =>
 // Не забудьте зарегистрировать фильтр как Scoped
 builder.Services.AddScoped<UserActionLogFilter>();
 
-// Добавляем CORS
-builder.Services.AddCors(options =>
+// Rate limiting для защиты от брутфорса на Login/Register
+builder.Services.AddRateLimiter(options =>
 {
-    options.AddPolicy("AllowAll",
-        builder =>
-        {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1)
+            }));
 });
 
 builder.Services.AddSession(options =>
@@ -101,6 +120,8 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
 // Добавляем Antiforgery с правильной настройкой для HTTP/HTTPS
@@ -114,7 +135,19 @@ builder.Services.AddAntiforgery(options =>
 
 
 builder.Services.AddHttpContextAccessor();
+// Пробрасываем заголовки reverse-proxy (nginx), чтобы RemoteIpAddress/схема были реальными
+builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+                             | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    // За типичным nginx-деплоем доверяем всем прокси; при необходимости ограничьте KnownProxies
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 // Настройка миграций базы данных
 using (var scope = app.Services.CreateScope())
@@ -132,11 +165,22 @@ using (var scope = app.Services.CreateScope())
         dbContext.SaveChanges();
     }
 
-    // Создаем суперпользователя, если его нет
+    // Создаем суперпользователя, если его нет.
+    // Пароль берётся из Security:SuperUserPassword (env: Security__SuperUserPassword);
+    // если не задан — генерируется случайный и логируется один раз.
     if (!dbContext.Users.Any(u => u.UserName == "su"))
     {
         var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
-        var (hash, salt) = authService.HashPassword("su");
+        var superUserPassword = builder.Configuration["Security:SuperUserPassword"];
+        if (string.IsNullOrWhiteSpace(superUserPassword))
+        {
+            superUserPassword = System.Security.Cryptography.RandomNumberGenerator.GetHexString(24);
+            app.Logger.LogWarning(
+                "Security:SuperUserPassword не задан. Для пользователя 'su' сгенерирован случайный пароль: {Password}. " +
+                "Смените его и сохраните в безопасном месте.",
+                superUserPassword);
+        }
+        var (hash, salt) = authService.HashPassword(superUserPassword);
 
         var superUser = new JwtAuthApp.Models.User
         {
@@ -269,8 +313,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 app.UseRouting();
-app.UseCors("AllowAll");
 app.UseSession();
+app.UseRateLimiter();
 
 app.UseMiddleware<SessionTokenMiddleware>();
 

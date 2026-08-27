@@ -276,20 +276,35 @@ public class AuthController : Controller
 
 ## 🛠️ Настройка приложения
 
-### **appsettings.json**
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=JwtAuthAppDb;Username=postgres;Password=password"
-  },
-  "Jwt": {
-    "Key": "Your-Very-Long-Secret-Key-At-Least-32-Characters",
-    "Issuer": "JwtAuthApp",
-    "Audience": "JwtAuthAppUsers",
-    "ExpireDays": 1
-  }
-}
+### **Секреты через переменные окружения**
+
+Секреты **не хранятся в appsettings.json** и передаются через переменные окружения (при старте приложение проверяет их наличие и падает с понятной ошибкой, если они не заданы):
+
+```bash
+# Строка подключения к PostgreSQL
+export ConnectionStrings__DefaultConnection="Host=localhost;Database=jwtapp;Username=jwtapp;Password=<пароль>"
+
+# JWT-ключ (минимум 32 символа)
+export Jwt__Key="<случайный ключ минимум 32 символа>"
+
+# Пароль суперпользователя 'su' (если не задан — генерируется случайный и логируется один раз)
+export Security__SuperUserPassword="<пароль>"
 ```
+
+Для локальной разработки в Windows (PowerShell):
+```powershell
+$env:ConnectionStrings__DefaultConnection = "Host=localhost;Database=jwtapp;Username=postgres;Password=<пароль>"
+$env:Jwt__Key = "<случайный ключ минимум 32 символа>"
+$env:Security__SuperUserPassword = "<пароль>"
+```
+
+Генерация JWT-ключа: `openssl rand -base64 48`
+
+Дополнительные параметры (опционально, в appsettings.json):
+- `Security:PasswordIterations` — число итераций PBKDF2 (по умолчанию 210000; хеши, созданные со старым значением 10000, продолжают приниматься)
+- `Jwt:ExpireDays` — срок жизни JWT-токена в днях (по умолчанию 1)
+
+### **appsettings.json**
 
 ### **Миграции базы данных**
 ```bash
@@ -312,7 +327,7 @@ dotnet ef database update
 1. Запустите приложение: `dotnet run`
 2. Перейдите по адресу: `http://localhost:5258`
 3. Должно произойти перенаправление на `/Auth/Login`
-4. Войдите как `su/su`
+4. Войдите как `su` (пароль задаётся в `Security__SuperUserPassword`; по умолчанию генерируется случайный и логируется при первом старте)
 5. После входа откроется главная страница
 6. Проверьте доступ к `/Admin` (только для Admin)
 7. Нажмите "Logout" для выхода

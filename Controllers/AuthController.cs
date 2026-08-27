@@ -7,11 +7,13 @@ using JwtAuthApp.ViewModels;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace JwtAuthApp.Controllers
 {
     // Разрешаем доступ без авторизации ко всем методам этого контроллера
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     public class AuthController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -28,6 +30,7 @@ namespace JwtAuthApp.Controllers
         public IActionResult Login() => View();
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
@@ -60,6 +63,7 @@ namespace JwtAuthApp.Controllers
         public IActionResult Register() => View();
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
@@ -105,6 +109,7 @@ namespace JwtAuthApp.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Logout()
         {
             // Проверяем, авторизован ли пользователь

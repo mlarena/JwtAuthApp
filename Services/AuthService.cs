@@ -14,12 +14,22 @@ namespace JwtAuthApp.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
-        private readonly TimeSpan _tokenLifetime = TimeSpan.FromDays(1);
+        private readonly TimeSpan _tokenLifetime;
+        private readonly int _iterations;
+        private const int LegacyIterations = 10000; // итерации, использовавшиеся до повышения (для обратной совместимости)
 
         public AuthService(IConfiguration configuration, ILogger<AuthService> logger)
         {
             _configuration = configuration;
             _logger = logger;
+
+            var expireDays = configuration.GetValue<double?>("Jwt:ExpireDays") ?? 1;
+            _tokenLifetime = TimeSpan.FromDays(expireDays);
+
+            // Рекомендация OWASP для PBKDF2-HMAC-SHA256 — не менее 600k; 210k — компромисс для совместимости
+            _iterations = configuration.GetValue<int?>("Security:PasswordIterations") ?? 210000;
+            if (_iterations < LegacyIterations)
+                _iterations = LegacyIterations;
         }
 
         public string GenerateJwtToken(User user)
@@ -84,7 +94,7 @@ namespace JwtAuthApp.Services
             using var pbkdf2 = new Rfc2898DeriveBytes(
                 password, 
                 saltBytes, 
-                10000, // Количество итераций
+                _iterations, // Количество итераций (настраивается в Security:PasswordIterations)
                 HashAlgorithmName.SHA256);
             
             byte[] hashBytes = pbkdf2.GetBytes(32);
@@ -103,13 +113,29 @@ namespace JwtAuthApp.Services
                 using var pbkdf2 = new Rfc2898DeriveBytes(
                     password,
                     saltBytes,
-                    10000,
+                    _iterations,
                     HashAlgorithmName.SHA256);
                 
                 byte[] computedHash = pbkdf2.GetBytes(32);
                 
                 // Сравнение с защитой от атак по времени
-                return CryptographicOperations.FixedTimeEquals(computedHash, storedHash);
+                if (CryptographicOperations.FixedTimeEquals(computedHash, storedHash))
+                    return true;
+
+                // Обратная совместимость: хеши, созданные со старым числом итераций (10000).
+                // При следующей смене пароля пользователь будет пере-хеширован с актуальными итерациями.
+                if (_iterations != LegacyIterations)
+                {
+                    using var legacyPbkdf2 = new Rfc2898DeriveBytes(
+                        password,
+                        saltBytes,
+                        LegacyIterations,
+                        HashAlgorithmName.SHA256);
+                    byte[] legacyHash = legacyPbkdf2.GetBytes(32);
+                    return CryptographicOperations.FixedTimeEquals(legacyHash, storedHash);
+                }
+
+                return false;
             }
             catch
             {
